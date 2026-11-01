@@ -12,6 +12,10 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Separate workspaces with their own build output.
+    "functions/**",
+    "tests/**",
+    "scripts/**",
   ]),
 ]);
 

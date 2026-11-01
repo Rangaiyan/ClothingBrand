@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isAdmin() { return signedIn() && request.auth.token.admin == true; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+
+    // Public storefront content: anyone reads, only admins write.
+    match /products/{id}        { allow read: if resource.data.published == true || isAdmin(); allow write: if isAdmin(); }
+    match /categories/{id}      { allow read: if true; allow write: if isAdmin(); }
+    match /banners/{id}         { allow read: if true; allow write: if isAdmin(); }
+    match /storeSettings/{id}   { allow read: if true; allow write: if isAdmin(); }
+
+    // Profile: owners edit only whitelisted fields, so nobody can grant themselves a role.
+    match /users/{uid} {
+      allow read: if isOwner(uid) || isAdmin();
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['name', 'email', 'phone', 'photoURL', 'createdAt']);
+      allow delete: if false;
+
+      match /addresses/{id} { allow read, write: if isOwner(uid); }
+      match /fcmTokens/{token} { allow read, write: if isOwner(uid); }
+    }
+
+    match /carts/{uid}     { allow read, write: if isOwner(uid); }
+    match /wishlists/{uid} { allow read, write: if isOwner(uid); }
+
+    // Orders are created and changed only by Cloud Functions (Admin SDK bypasses rules).
+    match /orders/{id} {
+      allow read: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow write: if false;
+    }
+
+    // Coupons are validated server-side so codes and limits are never exposed.
+    match /coupons/{code} {
+      allow read, write: if isAdmin();
+      match /redemptions/{uid} { allow read, write: if false; }
+    }
+
+    match /inventoryLogs/{id} { allow read: if isAdmin(); allow write: if false; }
+
+    match /reviews/{id} {
+      allow read: if true;
+      allow create: if signedIn()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
+        && request.resource.data.title is string && request.resource.data.title.size() <= 120
+        && request.resource.data.body is string && request.resource.data.body.size() <= 2000
+        && request.resource.data.keys().hasOnly(['uid', 'productId', 'rating', 'title', 'body', 'authorName', 'createdAt']);
+      allow update, delete: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+    }
+
+    match /newsletterSubscribers/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['email', 'createdAt'])
+        && request.resource.data.email is string
+        && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$');
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}

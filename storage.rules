@@ -1,0 +1,16 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isAdmin() { return request.auth != null && request.auth.token.admin == true; }
+
+    // Product, category and banner images are public; only admins upload, images under 5 MB.
+    match /{folder}/{allPaths=**} {
+      allow read: if folder in ['products', 'categories', 'banners'];
+      allow write: if isAdmin()
+        && folder in ['products', 'categories', 'banners']
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp|gif|avif)');
+    }
+    match /{allPaths=**} { allow read, write: if false; }
+  }
+}

@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Firebase Admin credentials, never commit
+service-account*.json
+*-adminsdk-*.json
+
+# nested workspaces
+node_modules/
