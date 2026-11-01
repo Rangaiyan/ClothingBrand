@@ -5,13 +5,13 @@ import Image from "next/image";
 import Link from "next/link";
 import logo from "@/app/icon.png";
 import { usePathname } from "next/navigation";
-import { Heart, Menu, Search, ShoppingBag, User, X } from "lucide-react";
+import { Heart, Home, Menu, Store, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/store/cart";
 import { useWishlist } from "@/store/wishlist";
 import { useHydrated } from "@/hooks/useHydrated";
 
 const NAV = [
-  { href: "/shop", label: "Shop" },
+  { href: "/shop", label: "Shop", Icon: Store },
   { href: "/collections/vesti", label: "Vesti" },
   { href: "/collections/lungi", label: "Lungi" },
   { href: "/collections/new-arrivals", label: "New Arrivals" },
@@ -112,10 +112,10 @@ function Badge({ n }: { n: number }) {
 }
 
 const TABS = [
-  { href: "/", label: "Home" },
-  { href: "/shop", label: "Shop" },
-  { href: "/cart", label: "Bag" },
-  { href: "/account", label: "Account" },
+  { href: "/", label: "Home", Icon: Home },
+  { href: "/shop", label: "Shop", Icon: Store },
+  { href: "/cart", label: "Bag", Icon: ShoppingBag },
+  { href: "/account", label: "Account", Icon: User },
 ];
 
 /** Mobile-only bottom tab bar. */
@@ -127,15 +127,16 @@ export function BottomNav() {
   return (
     <nav aria-label="Bottom" className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden">
       <ul className="pointer-events-auto mx-auto grid max-w-md grid-cols-4 gap-1 rounded-full border border-white/15 bg-brand p-1.5 shadow-sm">
-        {TABS.map(({ href, label }) => {
+        {TABS.map(({ href, label, Icon }) => {
           const on = active(href);
           return (
             <li key={href}>
               <Link href={href} aria-current={on ? "page" : undefined}
-                className={`relative flex h-10 items-center justify-center rounded-full text-sm transition-colors ${on ? "border border-white/20 bg-white/15 font-medium text-white" : "text-white/60 hover:text-white"}`}>
+                className={`relative flex h-10 items-center justify-center gap-1.5 rounded-full text-xs transition-colors ${on ? "border border-white/20 bg-white/15 font-medium text-white" : "text-white/60 hover:text-white"}`}>
+                <Icon size={16} strokeWidth={1.5} />
                 {label}
                 {href === "/cart" && hydrated && count > 0 && (
-                  <span className="absolute right-2 top-1 grid size-4 place-items-center rounded-full bg-white text-[10px] font-medium text-brand">{count}</span>
+                  <span className="absolute right-1.5 top-0.5 grid size-4 place-items-center rounded-full bg-white text-[10px] font-medium text-brand">{count}</span>
                 )}
               </Link>
             </li>
