@@ -132,11 +132,11 @@ export function BottomNav() {
           return (
             <li key={href}>
               <Link href={href} aria-current={on ? "page" : undefined}
-                className={`relative flex h-10 items-center justify-center gap-1.5 rounded-full text-xs transition-colors ${on ? "border border-white/20 bg-white/15 font-medium text-white" : "text-white/60 hover:text-white"}`}>
+                className={`relative flex h-10 items-center justify-center gap-1.5 rounded-full text-xs transition-colors ${on ? "bg-white font-medium text-brand" : "text-white/70 hover:text-white"}`}>
                 <Icon size={16} strokeWidth={1.5} />
                 {label}
                 {href === "/cart" && hydrated && count > 0 && (
-                  <span className="absolute right-1.5 top-0.5 grid size-4 place-items-center rounded-full bg-white text-[10px] font-medium text-brand">{count}</span>
+                  <span className="absolute right-1.5 top-0.5 grid size-4 place-items-center rounded-full bg-white text-[10px] font-medium text-brand ring-1 ring-brand">{count}</span>
                 )}
               </Link>
             </li>
