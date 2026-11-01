@@ -38,3 +38,11 @@ h3 {
     transition: none !important;
   }
 }
+
+/* Announcement marquee: two identical tracks, shifting by one track width loops seamlessly. */
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee 30s linear infinite;
+}

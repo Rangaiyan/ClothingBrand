@@ -48,11 +48,12 @@ export function ContentAdmin() {
 
       <form onSubmit={saveSettings} className={`${box} mb-8 grid max-w-3xl gap-4 sm:grid-cols-2`}>
         <h2 className="font-sans text-sm font-medium sm:col-span-2">Announcement, contact and social links</h2>
-        <div className="sm:col-span-2"><Field label="Announcement bar text (blank hides it)"><Input value={s.announcement} onChange={(e) => set("announcement", e.target.value)} /></Field></div>
+        <div className="sm:col-span-2"><Field label="Announcement bar text (separate several messages with |; blank hides it)"><Input value={s.announcement} onChange={(e) => set("announcement", e.target.value)} /></Field></div>
         <Field label="Contact email"><Input type="email" value={s.contactEmail} onChange={(e) => set("contactEmail", e.target.value)} /></Field>
         <Field label="Contact phone"><Input value={s.contactPhone} onChange={(e) => set("contactPhone", e.target.value)} /></Field>
         <div className="sm:col-span-2"><Field label="Address"><Input value={s.address} onChange={(e) => set("address", e.target.value)} /></Field></div>
         <Field label="Instagram URL"><Input type="url" value={s.instagram} onChange={(e) => set("instagram", e.target.value)} /></Field>
+        <Field label="YouTube URL"><Input type="url" value={s.youtube ?? ""} onChange={(e) => set("youtube", e.target.value)} /></Field>
         <Field label="Facebook URL"><Input type="url" value={s.facebook} onChange={(e) => set("facebook", e.target.value)} /></Field>
         <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" checked={s.codEnabled} onChange={(e) => set("codEnabled", e.target.checked)} /> Offer Cash on Delivery at checkout</label>
         <div className="sm:col-span-2"><button className={btn}>Save settings</button></div>

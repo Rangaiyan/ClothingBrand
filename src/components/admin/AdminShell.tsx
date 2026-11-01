@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { Loader } from "@/components/layout/Loader";
 import { isFirebaseConfigured } from "@/lib/firebase/client";
 
 const NAV = [
@@ -12,6 +13,7 @@ const NAV = [
   ["/admin/categories", "Categories"],
   ["/admin/orders", "Orders"],
   ["/admin/inventory", "Inventory"],
+  ["/admin/reviews", "Reviews"],
   ["/admin/coupons", "Coupons"],
   ["/admin/content", "Store content"],
   ["/admin/team", "Team"],
@@ -26,7 +28,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!user) return;
     let live = true;
-    user.getIdTokenResult(true).then((r) => live && setRole(r.claims.admin === true ? "admin" : "denied"));
+    user.getIdTokenResult(true)
+      .then((r) => live && setRole(r.claims.admin === true ? "admin" : "denied"))
+      // Never hang on the loader if the token refresh fails (offline, expired session).
+      .catch(() => live && setRole("denied"));
     return () => { live = false; };
   }, [user]);
 
@@ -38,7 +43,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   );
 
   if (!isFirebaseConfigured) return msg("Add your Firebase keys to .env.local to use the dashboard.");
-  if (loading || (user && role === "checking")) return <div className="min-h-screen" aria-busy="true" />;
+  if (loading || (user && role === "checking")) return <Loader fullScreen />;
   if (!user) return msg("Log in with an admin account.", <Link href="/login" className="mt-6 inline-block underline">Log in</Link>);
   if (role !== "admin") return msg("This account does not have admin access.");
 

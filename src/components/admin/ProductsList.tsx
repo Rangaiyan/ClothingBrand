@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Pencil } from "lucide-react";
 import { collection, deleteDoc, doc, orderBy, query, updateDoc } from "firebase/firestore";
 import { getDb } from "@/lib/firebase/client";
 import { formatINR } from "@/lib/utils/format";
@@ -36,6 +37,10 @@ export function ProductsList() {
                   <button className="underline" onClick={() => flip(p, "bestSeller")}>{p.bestSeller ? "★ Best seller" : "Best seller"}</button>
                 </td>
                 <td className={td}>
+                  <Link href={`/admin/products/${p.id}`} aria-label={`Edit ${p.name}`} title="Edit product"
+                    className="mr-1 inline-flex size-8 items-center justify-center border border-line align-middle hover:bg-neutral-100">
+                    <Pencil className="size-4" aria-hidden />
+                  </Link>
                   <button className={btnGhost} onClick={() => flip(p, "published")}>{p.published ? "Unpublish" : "Publish"}</button>{" "}
                   <button className="text-xs text-red-700 underline"
                     onClick={() => { if (confirm(`Delete "${p.name}" permanently? Unpublish instead to keep its history.`)) void deleteDoc(doc(getDb(), "products", p.id)); }}>

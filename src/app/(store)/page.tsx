@@ -1,8 +1,16 @@
 import Link from "next/link";
+import { HeroBanner, type Slide } from "@/components/layout/HeroBanner";
+import { ReviewsCarousel } from "@/components/layout/ReviewsCarousel";
 import { NewsletterForm } from "@/components/layout/NewsletterForm";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { getCategories, getProducts } from "@/services/catalog";
 import { getBanners } from "@/services/content";
+import { getLatestReviews } from "@/services/reviews";
+
+const DEFAULT_SLIDES: Slide[] = [
+  { src: "/banners/trending-shirts.jpg", alt: "New arrivals: Trending Shirts. Modern fits, everyday style.", href: "/collections/new-arrivals" },
+  { src: "/banners/vesti-collection.jpg", alt: "Premium Vesti collection. Tradition in every fold.", href: "/collections/vesti" },
+];
 
 function Section({ title, href, children }: { title: string; href?: string; children: React.ReactNode }) {
   return (
@@ -17,28 +25,22 @@ function Section({ title, href, children }: { title: string; href?: string; chil
 }
 
 export default async function HomePage() {
-  const [banners, categories, fresh, best] = await Promise.all([
+  const [banners, categories, fresh, best, reviews, allProducts] = await Promise.all([
     getBanners(),
     getCategories(),
     getProducts({ sort: "newest", limit: 4 }),
     getProducts({ sort: "best", bestSeller: true, limit: 4 }),
+    getLatestReviews(6),
+    getProducts(),
   ]);
+  const bySlug = new Map(allProducts.map((p) => [p.id, p]));
 
-  const hero = banners[0];
+  // Admin-managed banners (with an image) win; otherwise show the built-in launch banners.
+  const managed = banners.filter((b) => b.image).map((b) => ({ src: b.image, alt: b.heading, href: b.ctaHref || "/shop" }));
+  const slides = managed.length ? managed : DEFAULT_SLIDES;
   return (
     <>
-      <section className="bg-brand text-white">
-        <div className="mx-auto flex min-h-[70vh] max-w-[1440px] flex-col items-start justify-center px-4 py-20 md:px-8">
-          <p className="text-xs uppercase tracking-[0.3em] text-white/70">KAMELEON</p>
-          <h1 className="mt-4 text-5xl leading-tight md:text-8xl">{hero?.heading || "Tradition, Reimagined."}</h1>
-          <p className="mt-6 max-w-md text-white/80">
-            {hero?.subheading || "Vestis and lungis woven with heritage, finished for the way you live today."}
-          </p>
-          <Link href={hero?.ctaHref || "/shop"} className="mt-10 bg-white px-8 py-3 text-xs font-medium uppercase tracking-widest text-brand transition hover:bg-neutral-100">
-            {hero?.ctaLabel || "Shop the collection"}
-          </Link>
-        </div>
-      </section>
+      <HeroBanner slides={slides} />
 
       <Section title="Shop by Category">
         <div className="grid gap-4 md:grid-cols-2">
@@ -56,6 +58,15 @@ export default async function HomePage() {
 
       <Section title="New Arrivals" href="/collections/new-arrivals"><ProductGrid products={fresh} /></Section>
       <Section title="Best Sellers" href="/collections/best-sellers"><ProductGrid products={best} /></Section>
+
+      {reviews.length > 0 && (
+        <Section title="What Our Customers Say">
+          <ReviewsCarousel reviews={reviews.map((r) => {
+            const product = bySlug.get(r.productId);
+            return { id: r.id, rating: r.rating, title: r.title, body: r.body, authorName: r.authorName, product: product && { name: product.name, slug: product.slug } };
+          })} />
+        </Section>
+      )}
 
       <section className="mx-auto mt-24 max-w-3xl px-4 text-center">
         <h2 className="text-3xl md:text-4xl">Our Story</h2>

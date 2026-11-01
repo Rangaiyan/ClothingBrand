@@ -5,6 +5,7 @@ import { ProductGrid } from "@/components/product/ProductGrid";
 import { ProductImage } from "@/components/product/ProductImage";
 import { PurchasePanel } from "@/components/product/PurchasePanel";
 import { discountPercent, formatINR } from "@/lib/utils/format";
+import { getReviews } from "@/services/reviews";
 import { getProducts, getProductBySlug, getRelatedProducts, totalStock } from "@/services/catalog";
 
 export async function generateStaticParams() {
@@ -35,7 +36,8 @@ export default function ProductPage(props: PageProps<"/products/[slug]">) {
 async function ProductPageContent(props: PageProps<"/products/[slug]">) {
   const p = await getProductBySlug((await props.params).slug);
   if (!p) notFound();
-  const related = await getRelatedProducts(p);
+  const [related, reviews] = await Promise.all([getRelatedProducts(p), getReviews(p.id)]);
+  const avg = reviews.length ? reviews.reduce((n, r) => n + r.rating, 0) / reviews.length : 0;
   const off = discountPercent(p.price, p.originalPrice);
 
   const jsonLd = {
@@ -46,6 +48,13 @@ async function ProductPageContent(props: PageProps<"/products/[slug]">) {
     sku: p.variants[0]?.sku,
     brand: { "@type": "Brand", name: "KAMELEON" },
     image: p.images,
+    ...(reviews.length && {
+      aggregateRating: { "@type": "AggregateRating", ratingValue: avg.toFixed(1), reviewCount: reviews.length },
+      review: reviews.slice(0, 10).map((r) => ({
+        "@type": "Review", author: { "@type": "Person", name: r.authorName }, name: r.title, reviewBody: r.body,
+        reviewRating: { "@type": "Rating", ratingValue: r.rating }, datePublished: r.createdAt.slice(0, 10),
+      })),
+    }),
     offers: {
       "@type": "Offer",
       priceCurrency: "INR",
@@ -75,6 +84,12 @@ async function ProductPageContent(props: PageProps<"/products/[slug]">) {
 
         <div className="md:sticky md:top-24 md:self-start">
           <h1 className="text-4xl md:text-5xl">{p.name}</h1>
+          {reviews.length > 0 && (
+            <a href="#reviews" className="mt-3 inline-flex items-center gap-2 text-sm">
+              <span className="text-brand" aria-hidden>{"★".repeat(Math.round(avg))}<span className="text-neutral-300">{"★".repeat(5 - Math.round(avg))}</span></span>
+              <span className="text-muted underline underline-offset-4">{avg.toFixed(1)} · {reviews.length} review{reviews.length > 1 ? "s" : ""}</span>
+            </a>
+          )}
           <p className="mt-4 text-xl">
             <span className="font-medium">{formatINR(p.price)}</span>
             {off > 0 && (<>
@@ -95,6 +110,23 @@ async function ProductPageContent(props: PageProps<"/products/[slug]">) {
           </div>
         </div>
       </div>
+
+      {reviews.length > 0 && (
+        <section id="reviews" className="mt-24 scroll-mt-24">
+          <h2 className="text-3xl">Customer reviews</h2>
+          <p className="mt-2 text-sm text-muted">{avg.toFixed(1)} out of 5 from {reviews.length} review{reviews.length > 1 ? "s" : ""}</p>
+          <ul className="mt-8 grid gap-8 md:grid-cols-2">
+            {reviews.map((r) => (
+              <li key={r.id} className="border-t border-line pt-5">
+                <p className="text-brand" aria-label={`${r.rating} out of 5 stars`}>{"★".repeat(r.rating)}<span className="text-neutral-300">{"★".repeat(5 - r.rating)}</span></p>
+                <h3 className="mt-2 font-sans text-sm font-medium">{r.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted">{r.body}</p>
+                <p className="mt-3 text-xs text-muted">{r.authorName}{r.createdAt && ` · ${new Date(r.createdAt).toLocaleDateString("en-IN", { month: "short", year: "numeric" })}`}</p>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {related.length > 0 && (
         <section className="mt-24">

@@ -16,6 +16,8 @@ before(async () => {
     await setDoc(doc(d, "orders/o1"), { uid: "alice", total: 500 });
     await setDoc(doc(d, "coupons/SAVE10"), { value: 10 });
     await setDoc(doc(d, "users/alice"), { name: "Alice" });
+    await setDoc(doc(d, "reviews/pub"), { productId: "live", published: true, rating: 5 });
+    await setDoc(doc(d, "reviews/hidden"), { productId: "live", published: false, rating: 5 });
   });
 });
 after(() => env.cleanup());
@@ -70,6 +72,16 @@ test("reviews need a matching uid and a 1-5 rating", async () => {
   await assertFails(addDoc(collection(alice(), "reviews"), { ...ok, rating: 9 }));
   await assertFails(addDoc(collection(bob(), "reviews"), ok));
   await assertFails(addDoc(collection(anon(), "reviews"), ok));
+});
+
+test("reviews: public reads published only; only admins add or hide reviews", async () => {
+  await assertSucceeds(getDoc(doc(anon(), "reviews/pub")));
+  await assertFails(getDoc(doc(anon(), "reviews/hidden")));
+  await assertSucceeds(getDoc(doc(admin(), "reviews/hidden")));
+  const adminReview = { productId: "live", authorName: "Ravi", rating: 4, title: "t", body: "b", published: true, source: "admin", createdAt: 1 };
+  await assertSucceeds(addDoc(collection(admin(), "reviews"), adminReview));
+  await assertFails(addDoc(collection(alice(), "reviews"), adminReview));
+  await assertSucceeds(updateDoc(doc(admin(), "reviews/hidden"), { published: true }));
 });
 
 test("reviews reject oversized text", async () => {

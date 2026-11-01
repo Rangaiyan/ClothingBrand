@@ -1,3 +1,4 @@
+import { Loader } from "@/components/layout/Loader";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { ProductFilters } from "@/components/product/ProductFilters";
@@ -11,7 +12,7 @@ export default function ShopPage(props: PageProps<"/shop">) {
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-12 md:px-8">
       <h1 className="mb-8 text-4xl md:text-5xl">Shop All</h1>
-      <Suspense fallback={<p className="text-muted">Loading products…</p>}>
+      <Suspense fallback={<Loader size={180} />}>
         <ShopResults searchParams={props.searchParams} />
       </Suspense>
     </div>

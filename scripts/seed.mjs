@@ -16,7 +16,7 @@ const batch = db.batch();
 for (const { id, ...c } of seedCategories) batch.set(db.doc(`categories/${id}`), c);
 for (const { id, ...p } of seedProducts) batch.set(db.doc(`products/${id}`), p);
 batch.set(db.doc("storeSettings/main"), {
-  announcement: "Free shipping across India on orders above ₹1,999",
+  announcement: "Free shipping across India on orders above ₹1,999 | Get 10% off on first purchase - Use code : LAUNCH20",
   contactEmail: "", contactPhone: "", address: "", instagram: "", facebook: "", codEnabled: true,
 });
 batch.set(db.doc("coupons/WELCOME10"), {

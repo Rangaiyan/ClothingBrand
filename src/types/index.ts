@@ -53,6 +53,7 @@ export interface StoreSettings {
   address: string;
   instagram: string;
   facebook: string;
+  youtube?: string;
   codEnabled: boolean;
 }
 
@@ -67,4 +68,16 @@ export interface Coupon {
   perUserLimit?: number;
   expiresAt?: { toDate(): Date } | null;
   active: boolean;
+}
+
+export interface Review {
+  id: string;
+  productId: string;
+  authorName: string;
+  rating: number;
+  title: string;
+  body: string;
+  /** ISO date string on the storefront; Firestore Timestamp in the admin. */
+  createdAt: string;
+  published: boolean;
 }

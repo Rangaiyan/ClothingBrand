@@ -1,3 +1,4 @@
+import { Loader } from "@/components/layout/Loader";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
@@ -45,7 +46,7 @@ async function CollectionPageContent(props: PageProps<"/collections/[slug]">) {
     <div className="mx-auto max-w-[1440px] px-4 py-12 md:px-8">
       <h1 className="text-4xl md:text-5xl">{c.title}</h1>
       {c.description && <p className="mt-3 mb-8 max-w-xl text-muted">{c.description}</p>}
-      <Suspense fallback={<p className="text-muted">Loading products…</p>}>
+      <Suspense fallback={<Loader size={180} />}>
         <CollectionResults base={c.base} searchParams={props.searchParams} />
       </Suspense>
     </div>

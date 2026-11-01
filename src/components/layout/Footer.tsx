@@ -1,5 +1,7 @@
 import { Suspense } from "react";
+import Image from "next/image";
 import Link from "next/link";
+import logo from "@/app/icon.png";
 import { getSettings } from "@/services/content";
 
 const COLS = [
@@ -42,7 +44,10 @@ export async function Footer() {
     <footer className="mt-24 border-t border-line">
       <div className="mx-auto grid max-w-[1440px] gap-10 px-4 py-14 md:grid-cols-4 md:px-8">
         <div>
-          <p className="font-serif text-2xl font-semibold tracking-[0.25em] text-brand">KAMELEON</p>
+          <div className="flex items-center gap-3">
+            <Image src={logo} alt="" width={40} height={40} className="size-10" />
+            <p className="font-serif text-2xl font-semibold tracking-[0.25em] text-brand">KAMELEON</p>
+          </div>
           <p className="mt-3 text-sm text-muted">Tradition, Reimagined.</p>
           <ul className="mt-4 space-y-1 text-sm text-muted">
             {st.contactEmail && <li><a href={`mailto:${st.contactEmail}`}>{st.contactEmail}</a></li>}
