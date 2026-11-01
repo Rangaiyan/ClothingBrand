@@ -4,10 +4,10 @@ import dynamic from "next/dynamic";
 import animation from "@/assets/loader.json";
 
 // Lottie is only needed once a loader shows, so keep it out of the main bundle.
-// Until it arrives, show a plain CSS spinner so the screen is never blank.
+// Until it arrives render nothing (the white backdrop stays), so no second spinner flashes.
 const Lottie = dynamic(() => import("lottie-react").then((m) => m.Lottie), {
   ssr: false,
-  loading: () => <div className="size-10 animate-spin rounded-full border-2 border-brand/20 border-t-brand" />,
+  loading: () => null,
 });
 
 /** Brand loader. `fullScreen` centres it over the viewport; otherwise it sits inline. */

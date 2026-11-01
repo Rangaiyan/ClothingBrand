@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
+import { InitialLoader } from "@/components/layout/InitialLoader";
 import { AuthProvider } from "@/features/auth/AuthProvider";
 
 const inter = Inter({
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${inter.variable} ${cormorant.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <InitialLoader />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

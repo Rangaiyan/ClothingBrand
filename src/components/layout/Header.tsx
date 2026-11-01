@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import logo from "@/app/icon.png";
 import { usePathname } from "next/navigation";
-import { Heart, Home, Menu, Search, ShoppingBag, Store, User, X } from "lucide-react";
+import { Heart, Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { useCart } from "@/store/cart";
 import { useWishlist } from "@/store/wishlist";
 import { useHydrated } from "@/hooks/useHydrated";
@@ -112,10 +112,10 @@ function Badge({ n }: { n: number }) {
 }
 
 const TABS = [
-  { href: "/", label: "Home", Icon: Home },
-  { href: "/shop", label: "Shop", Icon: Store },
-  { href: "/cart", label: "Bag", Icon: ShoppingBag },
-  { href: "/account", label: "Account", Icon: User },
+  { href: "/", label: "Home" },
+  { href: "/shop", label: "Shop" },
+  { href: "/cart", label: "Bag" },
+  { href: "/account", label: "Account" },
 ];
 
 /** Mobile-only bottom tab bar. */
@@ -125,20 +125,18 @@ export function BottomNav() {
   const count = useCart((s) => s.lines.reduce((n, l) => n + l.qty, 0));
   const active = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
   return (
-    <nav aria-label="Bottom" className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-white pb-[env(safe-area-inset-bottom)] md:hidden">
-      <ul className="grid grid-cols-4">
-        {TABS.map(({ href, label, Icon }) => {
+    <nav aria-label="Bottom" className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] md:hidden">
+      <ul className="pointer-events-auto mx-auto grid max-w-md grid-cols-4 gap-1 rounded-full border border-white/15 bg-brand p-1.5 shadow-sm">
+        {TABS.map(({ href, label }) => {
           const on = active(href);
           return (
-            <li key={href} className="relative">
-              {on && <span className="absolute inset-x-0 top-0 h-0.5 bg-brand" />}
+            <li key={href}>
               <Link href={href} aria-current={on ? "page" : undefined}
-                className={`flex flex-col items-center gap-1 py-2 text-[11px] ${on ? "font-semibold text-brand" : "text-muted"}`}>
-                <span className="relative">
-                  <Icon size={22} strokeWidth={1.5} />
-                  {href === "/cart" && hydrated && count > 0 && <Badge n={count} />}
-                </span>
+                className={`relative flex h-10 items-center justify-center rounded-full text-sm transition-colors ${on ? "border border-white/20 bg-white/15 font-medium text-white" : "text-white/60 hover:text-white"}`}>
                 {label}
+                {href === "/cart" && hydrated && count > 0 && (
+                  <span className="absolute right-2 top-1 grid size-4 place-items-center rounded-full bg-white text-[10px] font-medium text-brand">{count}</span>
+                )}
               </Link>
             </li>
           );
