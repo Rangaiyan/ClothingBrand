@@ -1,3 +1,4 @@
+// DEV/EMULATOR ONLY: this overwrites existing documents. For a real project use migrate-products.mjs.
 // Loads the sample catalogue, categories and a welcome coupon into Firestore.
 //
 //   GOOGLE_APPLICATION_CREDENTIALS=key.json GCLOUD_PROJECT=<id> node scripts/seed.mjs
