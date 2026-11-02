@@ -45,12 +45,12 @@ export function HeroBanner({ slides, interval = 5000 }: { slides: Slide[]; inter
         {n > 1 && (
           <>
             <button type="button" aria-label="Previous banner" onClick={() => go(-1)}
-              className="absolute left-3 top-1/2 hidden -translate-y-1/2 bg-white/80 p-2 hover:bg-white md:block">
-              <ChevronLeft size={20} />
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 p-1 hover:bg-white md:left-3 md:p-2">
+              <ChevronLeft className="size-3.5 md:size-5" />
             </button>
             <button type="button" aria-label="Next banner" onClick={() => go(1)}
-              className="absolute right-3 top-1/2 hidden -translate-y-1/2 bg-white/80 p-2 hover:bg-white md:block">
-              <ChevronRight size={20} />
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 p-1 hover:bg-white md:right-3 md:p-2">
+              <ChevronRight className="size-3.5 md:size-5" />
             </button>
             <div className="absolute inset-x-0 bottom-3 flex justify-center gap-2">
               {slides.map((s, idx) => (

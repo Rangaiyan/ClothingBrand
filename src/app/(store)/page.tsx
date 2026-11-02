@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { HeroBanner, type Slide } from "@/components/layout/HeroBanner";
 import { ReviewsCarousel } from "@/components/layout/ReviewsCarousel";
 import { NewsletterForm } from "@/components/layout/NewsletterForm";
@@ -57,13 +58,20 @@ export default async function HomePage() {
 
       <section aria-label="Shop by category" className="mx-auto grid max-w-[1440px] grid-cols-2 gap-2 px-4 pt-2 md:gap-4 md:px-8 md:pt-4">
         {[modernGroup, traditionalGroup].map((g, i) => (
-          <Link key={g.slug} href={`/${g.slug}`} className="group relative block aspect-[16/10] overflow-hidden bg-neutral-100">
-            <Image src={CATEGORY_IMAGE[g.slug]} alt={`${g.name}: ${g.tagline}`} fill priority={i === 0}
-              sizes="(min-width: 1440px) 704px, 50vw"
-              className="object-cover object-center transition-transform duration-700 group-hover:scale-[1.03]" />
-            <div className="absolute bottom-2 left-3 text-[#111111] md:bottom-8 md:left-8">
-              <p className="hidden text-[11px] uppercase tracking-[0.25em] md:block">{g.tagline}</p>
-              <h2 className="text-xl md:mt-1 md:text-4xl">{g.name}</h2>
+          <Link key={g.slug} href={`/${g.slug}`} className="group relative block md:aspect-[16/10] md:overflow-hidden">
+            <div className="relative aspect-[16/10] overflow-hidden bg-neutral-100 md:absolute md:inset-0 md:aspect-auto">
+              <Image src={CATEGORY_IMAGE[g.slug]} alt={`${g.name}: ${g.tagline}`} fill priority={i === 0}
+                sizes="(min-width: 1440px) 704px, 50vw"
+                className="object-cover object-center transition-transform duration-700 group-hover:scale-[1.03]" />
+              {/* Phones: name and arrow sit on the photo. Desktop shows the text label instead (below). */}
+              <span aria-hidden className="absolute bottom-1.5 left-1.5 font-serif text-[14px] leading-none text-[#111111] md:hidden">{g.name}</span>
+              <ArrowRight aria-hidden strokeWidth={1.75}
+                className="absolute bottom-2 right-2 size-5 text-[#111111] transition-transform group-hover:translate-x-1 md:hidden" />
+            </div>
+            {/* Phones: tagline under the photo. Tablet and up: tagline, name and "Shop" link over the photo. */}
+            <div className="pt-2 text-[#111111] md:absolute md:bottom-8 md:left-8 md:pt-0">
+              <p className="text-[9px] uppercase tracking-[0.12em] md:text-[11px] md:tracking-[0.25em]">{g.tagline}</p>
+              <h2 className="hidden md:mt-1 md:block md:text-4xl">{g.name}</h2>
               <span className="mt-3 hidden text-xs uppercase tracking-widest underline underline-offset-4 md:inline-block">Shop {g.name}</span>
             </div>
           </Link>
