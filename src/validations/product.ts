@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { COLLECTIONS, getSubcategory } from "@/lib/taxonomy";
 
 const num = (label: string) => z.coerce.number({ error: `${label} is required` }).min(0, `${label} can't be negative`);
 
@@ -7,7 +8,10 @@ export const productSchema = z
     name: z.string().min(2, "Enter a name"),
     slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Lowercase letters, numbers and dashes only"),
     description: z.string().min(10, "Add a short description"),
-    category: z.string().min(1, "Choose a category"),
+    category: z.enum(["modern", "traditional"], { error: "Choose a category" }),
+    subcategory: z.string().min(1, "Choose a subcategory"),
+    collections: z.array(z.string()),
+    fit: z.string(),
     price: num("Price"),
     originalPrice: num("Original price"),
     fabric: z.string().min(2, "Enter the fabric"),
@@ -25,6 +29,8 @@ export const productSchema = z
       }))
       .min(1, "Add at least one variant"),
   })
+  .refine((v) => !v.subcategory || !!getSubcategory(v.category, v.subcategory), { path: ["subcategory"], message: "Subcategory doesn't belong to this category" })
+  .refine((v) => v.collections.every((c) => COLLECTIONS.some((x) => x.slug === c)), { path: ["collections"], message: "Unknown collection" })
   .refine((v) => v.originalPrice >= v.price, { path: ["originalPrice"], message: "Original price must be at least the selling price" })
   .refine((v) => new Set(v.variants.map((x) => x.sku)).size === v.variants.length, { path: ["variants"], message: "SKUs must be unique" });
 

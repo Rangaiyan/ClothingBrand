@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     template: "%s | KAMELEON",
   },
   description:
-    "KAMELEON is an Indian textile brand reimagining the vesti, lungi and traditional textiles.",
+    "KAMELEON is a menswear brand pairing contemporary fashion with timeless Indian wear: vesti, lungi and more.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

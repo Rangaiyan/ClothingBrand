@@ -10,6 +10,7 @@ export function parseListingParams(sp: Params) {
   return {
     values: {
       colour: one(sp.colour),
+      size: one(sp.size),
       maxPrice: one(sp.maxPrice),
       inStock: one(sp.inStock),
       sort: one(sp.sort),
@@ -18,6 +19,7 @@ export function parseListingParams(sp: Params) {
     query: {
       sort: sort && SORTS.includes(sort) ? sort : undefined,
       colour: one(sp.colour) || undefined,
+      size: one(sp.size) || undefined,
       maxPrice: maxPrice > 0 ? maxPrice : undefined,
       inStock: one(sp.inStock) === "1",
       q: one(sp.q) || undefined,

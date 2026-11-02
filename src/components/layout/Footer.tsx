@@ -10,9 +10,10 @@ const COLS = [
     title: "Shop",
     links: [
       ["All products", "/shop"],
-      ["Vesti", "/collections/vesti"],
-      ["Lungi", "/collections/lungi"],
-      ["Best Sellers", "/collections/best-sellers"],
+      ["Modern", "/modern"],
+      ["Traditional", "/traditional"],
+      ["Collections", "/collections"],
+      ["New Arrivals", "/new-arrivals"],
     ],
   },
   {

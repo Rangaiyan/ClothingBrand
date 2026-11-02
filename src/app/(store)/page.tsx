@@ -1,16 +1,12 @@
+import Image from "next/image";
 import Link from "next/link";
 import { HeroBanner, type Slide } from "@/components/layout/HeroBanner";
 import { ReviewsCarousel } from "@/components/layout/ReviewsCarousel";
 import { NewsletterForm } from "@/components/layout/NewsletterForm";
 import { ProductGrid } from "@/components/product/ProductGrid";
-import { getCategories, getProducts } from "@/services/catalog";
-import { getBanners } from "@/services/content";
+import { CATEGORY_GROUPS } from "@/lib/taxonomy";
+import { getProducts } from "@/services/catalog";
 import { getLatestReviews } from "@/services/reviews";
-
-const DEFAULT_SLIDES: Slide[] = [
-  { src: "/banners/trending-shirts.jpg", alt: "New arrivals: Trending Shirts. Modern fits, everyday style.", href: "/collections/new-arrivals" },
-  { src: "/banners/vesti-collection.jpg", alt: "Premium Vesti collection. Tradition in every fold.", href: "/collections/vesti" },
-];
 
 function Section({ title, href, children }: { title: string; href?: string; children: React.ReactNode }) {
   return (
@@ -24,45 +20,64 @@ function Section({ title, href, children }: { title: string; href?: string; chil
   );
 }
 
+// Banner artwork carries its own text. Keep new images at about 2:1 (e.g. 1758 x 895).
+const SLIDES: Slide[] = [
+  { src: "/banners/hero/luxury-arrival.png", alt: "Kameleon is arriving soon. A new expression of everyday luxury.", href: "/new-arrivals" },
+  { src: "/banners/hero/elevated.png", alt: "Everyday wear, elevated. Kameleon Essentials, new collection.", href: "/new-arrivals" },
+  { src: "/banners/hero/essentials-coming-soon.png", alt: "Kameleon Everyday Essentials: modern fits, timeless comfort. Coming soon.", href: "/modern" },
+];
+
+const CATEGORY_IMAGE: Record<string, string> = { modern: "/banners/modern.png", traditional: "/banners/traditionals.png" };
+
 export default async function HomePage() {
-  const [banners, categories, fresh, best, reviews, allProducts] = await Promise.all([
-    getBanners(),
-    getCategories(),
+  const [fresh, trending, modern, traditional, best, reviews, allProducts] = await Promise.all([
     getProducts({ sort: "newest", limit: 4 }),
-    getProducts({ sort: "best", bestSeller: true, limit: 4 }),
+    getProducts({ collection: "trending-now", limit: 4 }),
+    getProducts({ category: "modern", sort: "featured", limit: 4 }),
+    getProducts({ category: "traditional", sort: "featured", limit: 4 }),
+    getProducts({ collection: "best-sellers", sort: "best", limit: 4 }),
     getLatestReviews(6),
     getProducts(),
   ]);
-  const bySlug = new Map(allProducts.map((p) => [p.id, p]));
+  const byId = new Map(allProducts.map((p) => [p.id, p]));
+  const [modernGroup, traditionalGroup] = CATEGORY_GROUPS;
 
-  // Admin-managed banners (with an image) win; otherwise show the built-in launch banners.
-  const managed = banners.filter((b) => b.image).map((b) => ({ src: b.image, alt: b.heading, href: b.ctaHref || "/shop" }));
-  const slides = managed.length ? managed : DEFAULT_SLIDES;
+  // A section with no products is left out entirely, never filled with placeholders.
+  const rows: { title: string; href: string; products: typeof fresh }[] = [
+    { title: "New Arrivals", href: "/new-arrivals", products: fresh },
+    { title: "Trending Now", href: "/collections/trending-now", products: trending },
+    { title: "Explore Modern", href: "/modern", products: modern },
+    { title: "Explore Traditional", href: "/traditional", products: traditional },
+    { title: "Best Sellers", href: "/collections/best-sellers", products: best },
+  ];
+
   return (
     <>
-      <HeroBanner slides={slides} />
+      <HeroBanner slides={SLIDES} />
 
-      <Section title="Shop by Category">
-        <div className="grid gap-4 md:grid-cols-2">
-          {categories.map((c) => (
-            <Link key={c.id} href={`/collections/${c.slug}`} className="group relative flex aspect-[16/10] items-end bg-neutral-100 p-6">
-              <div>
-                <h3 className="text-3xl">{c.name}</h3>
-                <p className="mt-1 text-sm text-muted">{c.description}</p>
-                <span className="mt-3 inline-block text-xs uppercase tracking-widest underline-offset-4 group-hover:underline">Explore</span>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </Section>
+      <section aria-label="Shop by category" className="mx-auto grid max-w-[1440px] grid-cols-2 gap-2 px-4 pt-2 md:gap-4 md:px-8 md:pt-4">
+        {[modernGroup, traditionalGroup].map((g, i) => (
+          <Link key={g.slug} href={`/${g.slug}`} className="group relative block aspect-[16/10] overflow-hidden bg-neutral-100">
+            <Image src={CATEGORY_IMAGE[g.slug]} alt={`${g.name}: ${g.tagline}`} fill priority={i === 0}
+              sizes="(min-width: 1440px) 704px, 50vw"
+              className="object-cover object-center transition-transform duration-700 group-hover:scale-[1.03]" />
+            <div className="absolute bottom-2 left-3 text-[#111111] md:bottom-8 md:left-8">
+              <p className="hidden text-[11px] uppercase tracking-[0.25em] md:block">{g.tagline}</p>
+              <h2 className="text-xl md:mt-1 md:text-4xl">{g.name}</h2>
+              <span className="mt-3 hidden text-xs uppercase tracking-widest underline underline-offset-4 md:inline-block">Shop {g.name}</span>
+            </div>
+          </Link>
+        ))}
+      </section>
 
-      <Section title="New Arrivals" href="/collections/new-arrivals"><ProductGrid products={fresh} /></Section>
-      <Section title="Best Sellers" href="/collections/best-sellers"><ProductGrid products={best} /></Section>
+      {rows.filter((r) => r.products.length > 0).map((r) => (
+        <Section key={r.title} title={r.title} href={r.href}><ProductGrid products={r.products} /></Section>
+      ))}
 
       {reviews.length > 0 && (
         <Section title="What Our Customers Say">
           <ReviewsCarousel reviews={reviews.map((r) => {
-            const product = bySlug.get(r.productId);
+            const product = byId.get(r.productId);
             return { id: r.id, rating: r.rating, title: r.title, body: r.body, authorName: r.authorName, product: product && { name: product.name, slug: product.slug } };
           })} />
         </Section>
@@ -71,8 +86,9 @@ export default async function HomePage() {
       <section className="mx-auto mt-24 max-w-3xl px-4 text-center">
         <h2 className="text-3xl md:text-4xl">Our Story</h2>
         <p className="mt-5 text-muted">
-          KAMELEON takes the garments our grandfathers wore and rethinks them: the same honest cotton,
-          the same careful weave, refined for today. Like its namesake, it adapts without losing what it is.
+          KAMELEON is two wardrobes under one name: contemporary menswear cut for today, and the vestis
+          and lungis our grandfathers wore, kept honest in cotton and silk. Like its namesake, it adapts
+          without losing what it is.
         </p>
         <Link href="/about" className="mt-6 inline-block text-sm underline underline-offset-4">Read more</Link>
       </section>

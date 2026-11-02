@@ -28,7 +28,7 @@ async function SearchResults({ searchParams }: { searchParams: PageProps<"/searc
   return (
     <>
       <form action="/search" className="mb-8 flex gap-2" role="search">
-        <input name="q" defaultValue={values.q} placeholder="Search vesti, lungi…" aria-label="Search products" className="w-full max-w-md border border-line px-4 py-2 text-sm" />
+        <input name="q" defaultValue={values.q} placeholder="Search shirts, vesti, lungi…" aria-label="Search products" className="w-full max-w-md border border-line px-4 py-2 text-sm" />
         <button className="bg-foreground px-5 py-2 text-xs uppercase tracking-widest text-white">Search</button>
       </form>
       {query.q ? (

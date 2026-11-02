@@ -2,9 +2,11 @@
 export function ProductFilters({
   values,
   colours,
+  sizes = [],
 }: {
   values: Record<string, string | undefined>;
   colours: string[];
+  sizes?: string[];
 }) {
   const field = "border border-line bg-white px-3 py-2 text-sm";
   return (
@@ -16,6 +18,15 @@ export function ProductFilters({
           {colours.map((c) => <option key={c}>{c}</option>)}
         </select>
       </label>
+      {sizes.length > 1 && (
+        <label className="text-xs text-muted">
+          Size
+          <select name="size" defaultValue={values.size ?? ""} className={`${field} mt-1 block`}>
+            <option value="">All</option>
+            {sizes.map((c) => <option key={c}>{c}</option>)}
+          </select>
+        </label>
+      )}
       <label className="text-xs text-muted">
         Max price
         <select name="maxPrice" defaultValue={values.maxPrice ?? ""} className={`${field} mt-1 block`}>

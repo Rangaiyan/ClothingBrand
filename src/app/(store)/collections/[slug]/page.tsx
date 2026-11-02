@@ -1,74 +1,34 @@
-import { Loader } from "@/components/layout/Loader";
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ProductFilters } from "@/components/product/ProductFilters";
-import { ProductGrid } from "@/components/product/ProductGrid";
-import { parseListingParams } from "@/lib/utils/listing";
-import { getCategories, getProducts } from "@/services/catalog";
+import { Listing } from "@/components/catalog/Listing";
+import { COLLECTIONS, getCollection } from "@/lib/taxonomy";
+import { getActiveCollections } from "@/services/catalog";
 
-const SPECIAL: Record<string, { title: string; base: Parameters<typeof getProducts>[0] }> = {
-  "new-arrivals": { title: "New Arrivals", base: { sort: "newest" } },
-  "best-sellers": { title: "Best Sellers", base: { sort: "best", bestSeller: true } },
-};
-
-async function resolve(slug: string) {
-  if (SPECIAL[slug]) return { title: SPECIAL[slug].title, description: "", base: SPECIAL[slug].base };
-  const cat = (await getCategories()).find((c) => c.slug === slug);
-  return cat ? { title: cat.name, description: cat.description, base: { category: cat.slug } } : null;
-}
-
-export async function generateStaticParams() {
-  const cats = await getCategories();
-  return [...Object.keys(SPECIAL), ...cats.map((c) => c.slug)].map((slug) => ({ slug }));
+export function generateStaticParams() {
+  return COLLECTIONS.map((c) => ({ slug: c.slug }));
 }
 
 export async function generateMetadata(props: PageProps<"/collections/[slug]">): Promise<Metadata> {
-  const { slug } = await props.params;
-  const c = await resolve(slug);
-  return c ? { title: c.title, description: c.description || undefined, alternates: { canonical: `/collections/${slug}` } } : {};
+  const c = getCollection((await props.params).slug);
+  return c ? { title: c.name, description: c.description, alternates: { canonical: `/collections/${c.slug}` } } : {};
 }
 
-export default function CollectionPage(props: PageProps<"/collections/[slug]">) {
+export default function Page(props: PageProps<"/collections/[slug]">) {
   return (
     <Suspense fallback={<div className="mx-auto min-h-[60vh] max-w-[1440px] px-4 py-12 md:px-8" aria-busy="true" />}>
-      <CollectionPageContent {...props} />
+      <Content {...props} />
     </Suspense>
   );
 }
 
-async function CollectionPageContent(props: PageProps<"/collections/[slug]">) {
-  const { slug } = await props.params;
-  const c = await resolve(slug);
-  if (!c) notFound();
-
+async function Content(props: PageProps<"/collections/[slug]">) {
+  const c = getCollection((await props.params).slug);
+  // Collections with no active products aren't shown anywhere, so their URL 404s too.
+  if (!c || !(await getActiveCollections()).some((x) => x.slug === c.slug)) notFound();
   return (
-    <div className="mx-auto max-w-[1440px] px-4 py-12 md:px-8">
-      <h1 className="text-4xl md:text-5xl">{c.title}</h1>
-      {c.description && <p className="mt-3 mb-8 max-w-xl text-muted">{c.description}</p>}
-      <Suspense fallback={<Loader size={180} />}>
-        <CollectionResults base={c.base} searchParams={props.searchParams} />
-      </Suspense>
-    </div>
-  );
-}
-
-async function CollectionResults({
-  base,
-  searchParams,
-}: {
-  base: Parameters<typeof getProducts>[0];
-  searchParams: PageProps<"/collections/[slug]">["searchParams"];
-}) {
-  const { values, query } = parseListingParams(await searchParams);
-  const products = await getProducts({ ...base, ...query, sort: query.sort ?? base?.sort });
-  const all = await getProducts(base);
-  const colours = [...new Set(all.flatMap((p) => p.variants.map((v) => v.colour)))];
-
-  return (
-    <>
-      <ProductFilters values={values} colours={colours} />
-      <ProductGrid products={products} />
-    </>
+    <Listing title={c.name} description={c.description}
+      crumbs={[{ label: "Collections", href: "/collections" }, { label: c.name }]}
+      base={{ collection: c.slug }} searchParams={props.searchParams} />
   );
 }

@@ -28,7 +28,7 @@ export function ProductsList() {
             {rows.map((p) => (
               <tr key={p.id} className="border-t border-line">
                 <td className={td}><Link href={`/admin/products/${p.id}`} className="font-medium underline">{p.name}</Link></td>
-                <td className={td}>{p.category}</td>
+                <td className={td}>{[p.category, p.subcategory].filter(Boolean).join(" / ")}</td>
                 <td className={td}>{formatINR(p.price)}</td>
                 <td className={td}>{p.variants.reduce((n, v) => n + v.stock, 0)}</td>
                 <td className={td}><Badge tone={p.published ? "good" : "neutral"}>{p.published ? "Published" : "Draft"}</Badge></td>

@@ -10,7 +10,13 @@ export interface Product {
   slug: string;
   name: string;
   description: string;
-  category: "vesti" | "lungi" | string;
+  /** Main category slug: "modern" or "traditional" (see lib/taxonomy.ts). */
+  category: string;
+  /** Subcategory slug within the main category, e.g. "t-shirts" or "silk-vesti". */
+  subcategory: string;
+  /** Curated collection slugs. A product can sit in several. */
+  collections: string[];
+  fit?: string;
   price: number;
   originalPrice: number;
   images: string[];

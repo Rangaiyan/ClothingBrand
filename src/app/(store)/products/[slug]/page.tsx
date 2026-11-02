@@ -1,9 +1,11 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { Breadcrumbs } from "@/components/catalog/Breadcrumbs";
 import { ProductGrid } from "@/components/product/ProductGrid";
 import { ProductImage } from "@/components/product/ProductImage";
 import { PurchasePanel } from "@/components/product/PurchasePanel";
+import { getGroup, getSubcategory } from "@/lib/taxonomy";
 import { discountPercent, formatINR } from "@/lib/utils/format";
 import { getReviews } from "@/services/reviews";
 import { getProducts, getProductBySlug, getRelatedProducts, totalStock } from "@/services/catalog";
@@ -39,6 +41,13 @@ async function ProductPageContent(props: PageProps<"/products/[slug]">) {
   const [related, reviews] = await Promise.all([getRelatedProducts(p), getReviews(p.id)]);
   const avg = reviews.length ? reviews.reduce((n, r) => n + r.rating, 0) / reviews.length : 0;
   const off = discountPercent(p.price, p.originalPrice);
+  const group = getGroup(p.category);
+  const sub = getSubcategory(p.category, p.subcategory);
+  const crumbs = [
+    ...(group ? [{ label: group.name, href: `/${group.slug}` }] : [{ label: "Shop", href: "/shop" }]),
+    ...(group && sub ? [{ label: sub.name, href: `/${group.slug}/${sub.slug}` }] : []),
+    { label: p.name },
+  ];
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -65,7 +74,7 @@ async function ProductPageContent(props: PageProps<"/products/[slug]">) {
 
   const info: [string, React.ReactNode][] = [
     ["Fabric & material", p.fabric],
-    ["Specifications", <dl key="s" className="grid grid-cols-2 gap-1">{Object.entries(p.specifications).map(([k, v]) => (<div key={k} className="contents"><dt className="text-muted">{k}</dt><dd>{v}</dd></div>))}</dl>],
+    ["Specifications", <dl key="s" className="grid grid-cols-2 gap-1">{Object.entries({ ...(p.fit ? { Fit: p.fit } : {}), ...p.specifications }).map(([k, v]) => (<div key={k} className="contents"><dt className="text-muted">{k}</dt><dd>{v}</dd></div>))}</dl>],
     ["Care instructions", <ul key="c" className="list-disc pl-5">{p.care.map((c) => <li key={c}>{c}</li>)}</ul>],
     ["Shipping & returns", "Ships within 2–4 business days across India. Unused items can be returned within 7 days of delivery."],
   ];
@@ -73,6 +82,7 @@ async function ProductPageContent(props: PageProps<"/products/[slug]">) {
   return (
     <div className="mx-auto max-w-[1440px] px-4 py-10 md:px-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+      <Breadcrumbs items={crumbs} />
       <div className="grid gap-10 md:grid-cols-2">
         <div className="grid gap-3">
           {(p.images.length ? p.images : [""]).map((src, i) => (

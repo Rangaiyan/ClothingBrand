@@ -11,18 +11,14 @@ import { useWishlist } from "@/store/wishlist";
 import { useHydrated } from "@/hooks/useHydrated";
 
 const NAV = [
-  { href: "/shop", label: "Shop", Icon: Store },
-  { href: "/collections/vesti", label: "Vesti" },
-  { href: "/collections/lungi", label: "Lungi" },
-  { href: "/collections/new-arrivals", label: "New Arrivals" },
+  { href: "/shop", label: "Shop" },
+  { href: "/modern", label: "Modern" },
+  { href: "/traditional", label: "Traditional" },
+  { href: "/collections", label: "Collections" },
+  { href: "/new-arrivals", label: "New Arrivals" },
 ];
 
-const DRAWER = [
-  { href: "/collections/new-arrivals", label: "New Arrivals" },
-  { href: "/shop", label: "Shop All" },
-  { href: "/collections/vesti", label: "Vesti" },
-  { href: "/collections/lungi", label: "Lungi" },
-  { href: "/collections/best-sellers", label: "Best Sellers", highlight: true },
+const EXTRA = [
   { href: "/wishlist", label: "Wishlist" },
   { href: "/faqs", label: "Shipping & Returns" },
   { href: "/account/orders", label: "Track My Order" },
@@ -30,10 +26,14 @@ const DRAWER = [
 ];
 
 export function Header() {
+  const pathname = usePathname();
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
   const [open, setOpen] = useState(false);
   const hydrated = useHydrated();
   const count = useCart((s) => s.lines.reduce((n, l) => n + l.qty, 0));
   const wished = useWishlist((s) => s.ids.length);
+
+  const close = () => setOpen(false);
 
   useEffect(() => {
     document.body.style.overflow = open ? "hidden" : "";
@@ -42,32 +42,27 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-white">
-      <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between px-4 md:px-8">
-        <button
-          type="button"
-          className="md:hidden"
-          aria-label="Open menu"
-          aria-expanded={open}
-          onClick={() => setOpen(true)}
-        >
-          <Menu size={22} />
-        </button>
-
-        <nav aria-label="Primary" className="hidden gap-8 text-xs font-normal uppercase tracking-[0.18em] md:flex">
-          {NAV.map((n) => (
-            <Link key={n.href} href={n.href} className="transition hover:text-brand">
-              {n.label}
-            </Link>
-          ))}
-        </nav>
+      <div className="mx-auto grid h-16 max-w-[1440px] grid-cols-[1fr_auto_1fr] items-center px-4 md:px-8">
+        <div className="flex items-center">
+          <button
+            type="button"
+            className="lg:hidden"
+            aria-label="Open menu"
+            aria-expanded={open}
+            onClick={() => setOpen(true)}
+          >
+            <Menu size={22} />
+          </button>
+          <Link href="/search" aria-label="Search" className="hidden lg:block"><Search size={20} /></Link>
+        </div>
 
         <Link href="/" className="flex items-center gap-2 font-serif text-2xl font-semibold tracking-[0.25em] text-brand">
           <Image src={logo} alt="" width={32} height={32} className="size-8" priority />
           KAMELEON
         </Link>
 
-        <div className="flex items-center gap-4">
-          <Link href="/search" aria-label="Search"><Search size={20} /></Link>
+        <div className="flex items-center justify-end gap-4">
+          <Link href="/search" aria-label="Search" className="lg:hidden"><Search size={20} /></Link>
           <Link href="/account" aria-label="Account" className="hidden sm:block"><User size={20} /></Link>
           <Link href="/wishlist" aria-label="Wishlist" className="relative hidden sm:block">
             <Heart size={20} />
@@ -80,21 +75,40 @@ export function Header() {
         </div>
       </div>
 
+      {/* Desktop menu, on its own row under the brand name */}
+      <nav aria-label="Primary" className="hidden border-t border-line lg:block">
+        <ul className="mx-auto flex max-w-[1440px] justify-center gap-10 px-8 text-xs font-normal uppercase tracking-[0.18em]">
+          {NAV.map((n) => (
+            <li key={n.href}>
+              <Link href={n.href} aria-current={isActive(n.href) ? "page" : undefined}
+                className={`block border-b-2 py-3.5 transition hover:text-brand ${isActive(n.href) ? "border-brand font-medium text-brand" : "border-transparent"}`}>
+                {n.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
       {/* Mobile drawer */}
-      <div className={`fixed inset-0 z-50 md:hidden ${open ? "" : "pointer-events-none"}`} aria-hidden={!open}>
+      <div className={`fixed inset-0 z-50 lg:hidden ${open ? "" : "pointer-events-none"}`} aria-hidden={!open}>
         <div className={`absolute inset-0 bg-black/40 transition-opacity ${open ? "opacity-100" : "opacity-0"}`} onClick={() => setOpen(false)} />
         <nav aria-label="Mobile" className={`absolute inset-y-0 left-0 flex w-[85%] max-w-sm flex-col overflow-y-auto bg-white transition-transform duration-300 ${open ? "translate-x-0" : "-translate-x-full"}`}>
           <div className="flex h-16 shrink-0 items-center border-b border-line px-5">
             <button type="button" aria-label="Close menu" onClick={() => setOpen(false)}><X size={22} /></button>
           </div>
           <ul className="py-3">
-            {DRAWER.map((n) => (
+            {NAV.map((n) => (
               <li key={n.href}>
-                <Link href={n.href} tabIndex={open ? 0 : -1} onClick={() => setOpen(false)}
-                  className={`block px-5 py-3 text-xs uppercase tracking-[0.18em] ${n.highlight ? "bg-brand text-white" : ""}`}>
+                <Link href={n.href} tabIndex={open ? 0 : -1} onClick={close} aria-current={isActive(n.href) ? "page" : undefined}
+                  className={`block border-l-2 px-5 py-3 text-xs uppercase tracking-[0.18em] ${isActive(n.href) ? "border-brand bg-brand/5 font-medium text-brand" : "border-transparent"}`}>
                   {n.label}
                 </Link>
               </li>
+            ))}
+          </ul>
+          <ul className="mt-auto border-t border-line py-3">
+            {EXTRA.map((n) => (
+              <li key={n.href}><Link href={n.href} tabIndex={open ? 0 : -1} onClick={close} className="block px-5 py-3 text-xs uppercase tracking-[0.18em] text-muted">{n.label}</Link></li>
             ))}
           </ul>
         </nav>

@@ -5,11 +5,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFieldArray, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { collection, doc, getDoc, query, runTransaction } from "firebase/firestore";
+import { collection, doc, getDoc, runTransaction } from "firebase/firestore";
 import { getDb } from "@/lib/firebase/client";
-import { errMsg, useCollection } from "@/features/admin/hooks";
+import { errMsg } from "@/features/admin/hooks";
+import { CATEGORY_GROUPS, COLLECTIONS, getGroup, taxonomise } from "@/lib/taxonomy";
 import { productSchema, type ProductForm as FormValues, type ProductValues } from "@/validations/product";
-import type { Category, Product } from "@/types";
+import type { Product } from "@/types";
 import { ImageField } from "./ImageField";
 import { btn, Field, Input, input, Notice, PageHeader } from "./ui";
 
@@ -19,7 +20,7 @@ const fromLines = (s: string) =>
   Object.fromEntries(s.split("\n").map((l) => l.split(/:(.*)/)).filter((p) => p[0]?.trim() && p[1]?.trim()).map((p) => [p[0].trim(), p[1].trim()]));
 
 const EMPTY: FormValues = {
-  name: "", slug: "", description: "", category: "", price: 0, originalPrice: 0, fabric: "",
+  name: "", slug: "", description: "", category: "" as FormValues["category"], subcategory: "", collections: [], fit: "", price: 0, originalPrice: 0, fabric: "",
   specifications: "", care: "", published: false, featured: false, bestSeller: false,
   variants: [{ sku: "", size: "Free Size", colour: "", stock: 0 }],
 };
@@ -27,7 +28,6 @@ const EMPTY: FormValues = {
 export function ProductForm({ id }: { id: string }) {
   const router = useRouter();
   const isNew = id === "new";
-  const categories = useCollection<Category>(() => query(collection(getDb(), "categories")), "cats");
   // A new product gets its id up front so images can upload before the first save.
   const [docId] = useState(() => (isNew ? doc(collection(getDb(), "products")).id : id));
   const [images, setImages] = useState<string[]>([]);
@@ -36,20 +36,23 @@ export function ProductForm({ id }: { id: string }) {
   const [error, setError] = useState("");
   const [saved, setSaved] = useState("");
 
-  const { register, control, handleSubmit, reset, setValue, getValues, formState: { errors, isSubmitting } } = useForm<FormValues, unknown, ProductValues>({
+  const { register, control, handleSubmit, reset, setValue, getValues, watch, formState: { errors, isSubmitting } } = useForm<FormValues, unknown, ProductValues>({
     resolver: zodResolver(productSchema),
     defaultValues: EMPTY,
   });
+  const category = watch("category");
+  const collections = watch("collections") ?? [];
   const { fields, append, remove } = useFieldArray({ control, name: "variants" });
 
   useEffect(() => {
     if (isNew) return;
     getDoc(doc(getDb(), "products", id)).then((s) => {
       if (!s.exists()) { setError("Product not found."); return; }
-      const p = s.data() as Product;
+      // taxonomise() maps products saved with the old vesti/lungi category onto the new tree.
+      const p = taxonomise(s.data() as Product);
       setImages(p.images);
       setExistingStock(Object.fromEntries(p.variants.map((v) => [v.sku, v.stock])));
-      reset({ ...p, specifications: toLines(p.specifications), care: p.care.join("\n") });
+      reset({ ...p, category: p.category as FormValues["category"], fit: p.fit ?? "", specifications: toLines(p.specifications), care: p.care.join("\n") });
       setLoaded(true);
     });
   }, [id, isNew, reset]);
@@ -67,7 +70,8 @@ export function ProductForm({ id }: { id: string }) {
         const live = cur.exists() ? (cur.data() as Product) : null;
         const stockBySku = new Map(live?.variants.map((x) => [x.sku, x.stock]));
         tx.set(ref, {
-          name: v.name, slug: v.slug, description: v.description, category: v.category,
+          name: v.name, slug: v.slug, description: v.description, category: v.category, subcategory: v.subcategory,
+          collections: v.collections, fit: v.fit,
           price: v.price, originalPrice: v.originalPrice, fabric: v.fabric,
           specifications: fromLines(v.specifications),
           care: v.care.split("\n").map((l) => l.trim()).filter(Boolean),
@@ -104,11 +108,18 @@ export function ProductForm({ id }: { id: string }) {
           <Field label="Description" error={e.description?.message}><textarea {...register("description")} rows={4} className={input} /></Field>
         </div>
         <Field label="Category" error={e.category?.message}>
-          <select {...register("category")} className={input}>
+          <select {...register("category", { onChange: () => setValue("subcategory", "") })} className={input}>
             <option value="">Select…</option>
-            {categories.rows.map((c) => <option key={c.id} value={c.slug}>{c.name}</option>)}
+            {CATEGORY_GROUPS.map((g) => <option key={g.slug} value={g.slug}>{g.name}</option>)}
           </select>
         </Field>
+        <Field label="Subcategory" error={e.subcategory?.message}>
+          <select {...register("subcategory")} className={input} disabled={!category}>
+            <option value="">{category ? "Select…" : "Choose a category first"}</option>
+            {getGroup(category)?.subcategories.map((s) => <option key={s.slug} value={s.slug}>{s.name}</option>)}
+          </select>
+        </Field>
+        <Field label="Fit (optional)"><Input {...register("fit")} placeholder="Regular, Slim, Relaxed…" /></Field>
         <Field label="Fabric / material" error={e.fabric?.message}><Input {...register("fabric")} /></Field>
         <Field label="Selling price (₹)" error={e.price?.message}><Input type="number" min={0} {...register("price")} /></Field>
         <Field label="Original price (₹)" error={e.originalPrice?.message}><Input type="number" min={0} {...register("originalPrice")} /></Field>
@@ -144,6 +155,20 @@ export function ProductForm({ id }: { id: string }) {
       <section className="grid gap-4 border border-line bg-white p-5 sm:grid-cols-2">
         <Field label="Specifications (one “Name: value” per line)"><textarea {...register("specifications")} rows={5} className={input} /></Field>
         <Field label="Care instructions (one per line)"><textarea {...register("care")} rows={5} className={input} /></Field>
+      </section>
+
+      <section className="space-y-3 border border-line bg-white p-5 text-sm">
+        <h2 className="font-sans text-sm font-medium">Collections</h2>
+        <p className="text-xs text-muted">A product can be in several. “Best seller” and “Featured” below also place it in Best Sellers and Trending Now.</p>
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          {COLLECTIONS.filter((c) => c.slug !== "best-sellers" && c.slug !== "trending-now").map((c) => (
+            <label key={c.slug} className="flex items-center gap-2">
+              <input type="checkbox" checked={collections.includes(c.slug)}
+                onChange={(ev) => setValue("collections", ev.target.checked ? [...collections, c.slug] : collections.filter((x) => x !== c.slug))} />
+              {c.name}
+            </label>
+          ))}
+        </div>
       </section>
 
       <section className="flex flex-wrap gap-6 border border-line bg-white p-5 text-sm">

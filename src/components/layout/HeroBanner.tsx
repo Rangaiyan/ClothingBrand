@@ -7,7 +7,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export interface Slide { src: string; alt: string; href: string }
 
-/** Full-width image slider. Banner artwork carries its own headline and button, so no text overlay. */
+/**
+ * Image slider. The artwork carries its own headline, so there is no text overlay.
+ * It sits inside the same container as the category cards below, so the edges line up.
+ */
 export function HeroBanner({ slides, interval = 5000 }: { slides: Slide[]; interval?: number }) {
   const [i, setI] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -23,38 +26,42 @@ export function HeroBanner({ slides, interval = 5000 }: { slides: Slide[]; inter
   if (!n) return null;
   return (
     <section
-      aria-roledescription="carousel" aria-label="Featured collections"
-      className="relative overflow-hidden bg-neutral-100"
-      onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}
+      aria-roledescription="carousel" aria-label="Featured"
+      className="mx-auto max-w-[1440px] px-4 pt-4 md:px-8 md:pt-6"
     >
-      <div className="flex transition-transform duration-700 ease-out" style={{ transform: `translateX(-${i * 100}%)` }}>
-        {slides.map((s, idx) => (
-          <Link key={s.src} href={s.href} tabIndex={idx === i ? 0 : -1} aria-hidden={idx !== i}
-            className="relative block aspect-[2/1] w-full shrink-0">
-            <Image src={s.src} alt={s.alt} fill sizes="100vw" priority={idx === 0} className="object-cover" />
-          </Link>
-        ))}
-      </div>
+      <div
+        className="relative overflow-hidden bg-neutral-100"
+        onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}
+      >
+        <div className="flex transition-transform duration-700 ease-out" style={{ transform: `translateX(-${i * 100}%)` }}>
+          {slides.map((s, idx) => (
+            <Link key={s.src} href={s.href} tabIndex={idx === i ? 0 : -1} aria-hidden={idx !== i}
+              className="relative block aspect-[1758/895] w-full shrink-0">
+              <Image src={s.src} alt={s.alt} fill priority={idx === 0} sizes="(min-width: 1440px) 1376px, 100vw" className="object-cover" />
+            </Link>
+          ))}
+        </div>
 
-      {n > 1 && (
-        <>
-          <button type="button" aria-label="Previous banner" onClick={() => go(-1)}
-            className="absolute left-3 top-1/2 hidden -translate-y-1/2 bg-white/80 p-2 hover:bg-white md:block">
-            <ChevronLeft size={20} />
-          </button>
-          <button type="button" aria-label="Next banner" onClick={() => go(1)}
-            className="absolute right-3 top-1/2 hidden -translate-y-1/2 bg-white/80 p-2 hover:bg-white md:block">
-            <ChevronRight size={20} />
-          </button>
-          <div className="absolute inset-x-0 bottom-3 flex justify-center gap-2">
-            {slides.map((s, idx) => (
-              <button key={s.src} type="button" aria-label={`Go to banner ${idx + 1}`} aria-current={idx === i}
-                onClick={() => setI(idx)}
-                className={`h-1.5 transition-all ${idx === i ? "w-6 bg-brand" : "w-1.5 bg-brand/40"}`} />
-            ))}
-          </div>
-        </>
-      )}
+        {n > 1 && (
+          <>
+            <button type="button" aria-label="Previous banner" onClick={() => go(-1)}
+              className="absolute left-3 top-1/2 hidden -translate-y-1/2 bg-white/80 p-2 hover:bg-white md:block">
+              <ChevronLeft size={20} />
+            </button>
+            <button type="button" aria-label="Next banner" onClick={() => go(1)}
+              className="absolute right-3 top-1/2 hidden -translate-y-1/2 bg-white/80 p-2 hover:bg-white md:block">
+              <ChevronRight size={20} />
+            </button>
+            <div className="absolute inset-x-0 bottom-3 flex justify-center gap-2">
+              {slides.map((s, idx) => (
+                <button key={s.src} type="button" aria-label={`Go to banner ${idx + 1}`} aria-current={idx === i}
+                  onClick={() => setI(idx)}
+                  className={`h-1.5 transition-all ${idx === i ? "w-6 bg-brand" : "w-1.5 bg-brand/40"}`} />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
     </section>
   );
 }

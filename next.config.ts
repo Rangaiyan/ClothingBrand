@@ -13,6 +13,14 @@ const nextConfig: NextConfig = {
         : []),
     ],
   },
+  // Old flat category URLs keep working.
+  async redirects() {
+    return [
+      { source: "/collections/vesti", destination: "/traditional", permanent: true },
+      { source: "/collections/lungi", destination: "/traditional", permanent: true },
+      { source: "/collections/new-arrivals", destination: "/new-arrivals", permanent: true },
+    ];
+  },
   async headers() {
     return [{
       source: "/:path*",
