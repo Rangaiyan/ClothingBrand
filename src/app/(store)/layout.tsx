@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Footer } from "@/components/layout/Footer";
 import { BottomNav, Header } from "@/components/layout/Header";
+import { WelcomePopup } from "@/components/layout/WelcomePopup";
 
 export default function StoreLayout({ children }: LayoutProps<"/">) {
   return (
@@ -11,6 +12,7 @@ export default function StoreLayout({ children }: LayoutProps<"/">) {
       <main className="flex-1 pb-16 md:pb-0">{children}</main>
       <Suspense fallback={null}><Footer /></Suspense>
       <BottomNav />
+      <WelcomePopup />
     </>
   );
 }

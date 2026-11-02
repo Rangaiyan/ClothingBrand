@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { collection, getAggregateFromServer, getCountFromServer, limit, orderBy, query, sum, where } from "firebase/firestore";
+import { collection, doc, getAggregateFromServer, getCountFromServer, getDoc, limit, orderBy, query, sum, where } from "firebase/firestore";
 import { getDb } from "@/lib/firebase/client";
 import { formatINR } from "@/lib/utils/format";
+import { WELCOME_OFFER } from "@/lib/welcome-offer";
 import { errMsg, useCollection } from "@/features/admin/hooks";
 import type { Product } from "@/types";
 import { Badge, Notice, PageHeader, td, th } from "./ui";
@@ -21,6 +22,7 @@ const PAID = ["paid", "partially_refunded"];
 
 export function Dashboard() {
   const [stats, setStats] = useState<Record<string, number> | null>(null);
+  const [welcome, setWelcome] = useState<Record<string, number> | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -38,6 +40,13 @@ export function Dashboard() {
       .then(([sales, total, customers, products, pending, completed]) =>
         setStats({ sales: sales.data().sales ?? 0, total, customers, products, pending, completed }))
       .catch((e) => setError(errMsg(e)));
+  }, []);
+
+  useEffect(() => {
+    const db = getDb();
+    Promise.all([getDoc(doc(db, "popupStats", "welcome")), getDoc(doc(db, "coupons", WELCOME_OFFER.code))])
+      .then(([stats, coupon]) => setWelcome({ ...(stats.data() as Record<string, number> | undefined), orders: coupon.data()?.usedCount ?? 0 }))
+      .catch(() => setWelcome({}));
   }, []);
 
   const recent = useCollection<OrderRow>(() => query(collection(getDb(), "orders"), orderBy("createdAt", "desc"), limit(5)), "recent");
@@ -67,6 +76,18 @@ export function Dashboard() {
           </div>
         ))}
       </div>
+
+      <section className="mt-8 border border-line bg-white">
+        <h2 className="border-b border-line px-4 py-3 font-sans text-sm font-medium">Welcome offer ({WELCOME_OFFER.code})</h2>
+        <dl className="grid grid-cols-2 gap-px bg-line sm:grid-cols-5">
+          {([["Popup views", "impressions"], ["Dismissed", "dismissals"], ["Subscribed", "subscriptions"], ["Codes copied", "copies"], ["Orders placed", "orders"]] as const).map(([label, k]) => (
+            <div key={k} className="bg-white p-4">
+              <dt className="text-xs uppercase tracking-wider text-muted">{label}</dt>
+              <dd className="mt-1 font-serif text-2xl">{welcome ? (welcome[k] ?? 0) : "—"}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
 
       <div className="mt-8 grid gap-6 xl:grid-cols-2">
         <section className="border border-line bg-white">

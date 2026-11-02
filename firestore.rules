@@ -54,8 +54,26 @@ service cloud.firestore {
       allow update, delete: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
     }
 
+    // Welcome-popup funnel counters. Anyone may add 1 to a single counter; nothing else is writable.
+    match /popupStats/{id} {
+      function bump(f) {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly([f])
+          && request.resource.data[f] == resource.data.get(f, 0) + 1;
+      }
+      function first(f) {
+        return request.resource.data.keys().hasOnly([f]) && request.resource.data[f] == 1;
+      }
+      allow read: if isAdmin();
+      allow create: if id == 'welcome'
+        && (first('impressions') || first('dismissals') || first('copies') || first('subscriptions'));
+      allow update: if id == 'welcome'
+        && (bump('impressions') || bump('dismissals') || bump('copies') || bump('subscriptions'));
+      allow delete: if false;
+    }
+
     match /newsletterSubscribers/{id} {
-      allow create: if request.resource.data.keys().hasOnly(['email', 'createdAt'])
+      allow create: if request.resource.data.keys().hasOnly(['email', 'createdAt', 'source'])
+        && request.resource.data.get('source', 'footer') in ['footer', 'welcome-popup']
         && request.resource.data.email is string
         && request.resource.data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$');
       allow read, update, delete: if isAdmin();

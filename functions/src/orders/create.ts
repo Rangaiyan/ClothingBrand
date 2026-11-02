@@ -57,7 +57,7 @@ export const createOrder = onCall(callableOptions, async (req) => {
 
     // Pass 1 (read-only): price the cart so a Razorpay order can be created for the exact amount.
     const docs = await loadProducts(data.items, getter());
-    const coupon = await loadCoupon(data.couponCode, uid, getter());
+    const coupon = await loadCoupon(data.couponCode, uid, getter(), { phone: data.contact.phone });
     const quote = priceOrder(data.items, variantLookup(docs), coupon, now);
 
     let razorpayOrderId: string | null = null;
@@ -78,7 +78,7 @@ export const createOrder = onCall(callableOptions, async (req) => {
 
       const get = getter(tx);
       const docsTx = await loadProducts(data.items, get);
-      const couponTx = await loadCoupon(data.couponCode, uid, get);
+      const couponTx = await loadCoupon(data.couponCode, uid, get, { tx, phone: data.contact.phone });
       const priced = priceOrder(data.items, variantLookup(docsTx), couponTx, now);
       if (priced.total !== quote.total) {
         throw new OrderError("failed-precondition", "Prices changed while you were checking out. Please review your bag.");

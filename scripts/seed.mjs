@@ -23,5 +23,9 @@ batch.set(db.doc("coupons/WELCOME10"), {
   code: "WELCOME10", type: "percent", value: 10, minOrder: 999, maxDiscount: 300,
   usageLimit: null, perUserLimit: 1, expiresAt: null, active: true, usedCount: 0,
 });
+batch.set(db.doc("coupons/WELCOME15"), {
+  code: "WELCOME15", type: "percent", value: 15, minOrder: 999, maxDiscount: null,
+  usageLimit: null, perUserLimit: 1, firstOrderOnly: true, expiresAt: null, active: true, usedCount: 0,
+});
 await batch.commit();
-console.log(`Seeded ${seedCategories.length} categories, ${seedProducts.length} products, settings and WELCOME10.`);
+console.log(`Seeded ${seedCategories.length} categories, ${seedProducts.length} products, settings, WELCOME10 and WELCOME15.`);

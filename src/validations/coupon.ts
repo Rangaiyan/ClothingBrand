@@ -12,6 +12,7 @@ export const couponSchema = z
     usageLimit: optionalNum,
     perUserLimit: optionalNum,
     expiresOn: z.string().optional(),
+    firstOrderOnly: z.boolean().optional(),
     active: z.boolean(),
   })
   .refine((c) => c.type !== "percent" || c.value <= 100, { path: ["value"], message: "A percentage can't exceed 100" });

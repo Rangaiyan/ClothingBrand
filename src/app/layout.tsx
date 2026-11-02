@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Inter } from "next/font/google";
 import "./globals.css";
 import { SITE_URL } from "@/lib/site";
 import { InitialLoader } from "@/components/layout/InitialLoader";
+import { THEME_INIT_SCRIPT } from "@/lib/theme";
 import { AuthProvider } from "@/features/auth/AuthProvider";
 
 const inter = Inter({
@@ -32,7 +33,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${inter.variable} ${cormorant.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col">
         <InitialLoader />
         <AuthProvider>{children}</AuthProvider>

@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import logo from "@/app/icon.png";
+import { ThemeSwitcher } from "@/components/layout/ThemeSwitcher";
 import { getSettings } from "@/services/content";
 
 const COLS = [
@@ -67,7 +68,10 @@ export async function Footer() {
           </div>
         ))}
       </div>
-      <p className="border-t border-line py-5 text-center text-xs text-muted">
+      <div className="flex justify-center border-t border-line pt-5">
+        <ThemeSwitcher />
+      </div>
+      <p className="py-5 text-center text-xs text-muted">
         © <Suspense fallback="2026"><Year /></Suspense> KAMELEON. All rights reserved.
       </p>
     </footer>

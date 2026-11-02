@@ -66,6 +66,8 @@ export interface Coupon {
   usageLimit?: number;
   usedCount?: number;
   perUserLimit?: number;
+  /** Only customers with no previous order can use it. Enforced in Cloud Functions. */
+  firstOrderOnly?: boolean;
   expiresAt?: { toDate(): Date } | null;
   active: boolean;
 }

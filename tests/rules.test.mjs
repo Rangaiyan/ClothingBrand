@@ -1,7 +1,7 @@
 import test, { before, after } from "node:test";
 import { readFileSync } from "node:fs";
 import { initializeTestEnvironment, assertFails, assertSucceeds } from "@firebase/rules-unit-testing";
-import { doc, getDoc, setDoc, updateDoc, addDoc, collection } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, addDoc, collection, increment } from "firebase/firestore";
 
 let env;
 before(async () => {
@@ -94,6 +94,26 @@ test("newsletter: anyone can subscribe with a valid email, nobody can read", asy
   await assertSucceeds(addDoc(collection(anon(), "newsletterSubscribers"), { email: "a@b.co", createdAt: 1 }));
   await assertFails(addDoc(collection(anon(), "newsletterSubscribers"), { email: "nope", createdAt: 1 }));
   await assertFails(getDoc(doc(anon(), "newsletterSubscribers/x")));
+});
+
+test("newsletter: welcome-popup source is allowed, unknown sources and extra fields are not", async () => {
+  await assertSucceeds(addDoc(collection(anon(), "newsletterSubscribers"), { email: "a@b.co", createdAt: 1, source: "welcome-popup" }));
+  await assertFails(addDoc(collection(anon(), "newsletterSubscribers"), { email: "a@b.co", createdAt: 1, source: "other" }));
+  await assertFails(addDoc(collection(anon(), "newsletterSubscribers"), { email: "a@b.co", createdAt: 1, admin: true }));
+});
+
+test("popup stats: anyone can add exactly 1 to one counter; admins read; nothing else", async () => {
+  const stats = doc(anon(), "popupStats/welcome");
+  await assertSucceeds(setDoc(stats, { impressions: increment(1) }, { merge: true })); // creates
+  await assertSucceeds(setDoc(stats, { impressions: increment(1) }, { merge: true }));
+  await assertSucceeds(setDoc(stats, { copies: increment(1) }, { merge: true })); // first time for a new field
+  await assertFails(setDoc(stats, { impressions: increment(50) }, { merge: true }));
+  await assertFails(setDoc(stats, { impressions: 0 }, { merge: true }));
+  await assertFails(setDoc(stats, { impressions: increment(1), copies: increment(1) }, { merge: true }));
+  await assertFails(setDoc(stats, { other: increment(1) }, { merge: true }));
+  await assertFails(setDoc(doc(anon(), "popupStats/elsewhere"), { impressions: increment(1) }, { merge: true }));
+  await assertFails(getDoc(stats));
+  await assertSucceeds(getDoc(doc(admin(), "popupStats/welcome")));
 });
 
 test("inventory logs are admin-read, never client-written", async () => {

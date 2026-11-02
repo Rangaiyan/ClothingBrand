@@ -19,8 +19,7 @@ export function OrderSummary({ lines, showCoupon = true }: { lines: CartLine[]; 
   const discount = coupon ? Math.min(coupon.discount, subtotal) : 0;
   const shipping = estimateShipping(subtotal);
 
-  async function apply(e: React.FormEvent) {
-    e.preventDefault();
+  async function apply() {
     if (!code) return;
     if (!isFirebaseConfigured) return setNote("Coupons will be available once the store is live.");
     setBusy(true);
@@ -48,10 +47,12 @@ export function OrderSummary({ lines, showCoupon = true }: { lines: CartLine[]; 
               <button type="button" className="text-xs underline" onClick={() => setCoupon(null)}>Remove</button>
             </p>
           ) : (
-            <form className="flex gap-2" onSubmit={apply}>
-              <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Coupon code" aria-label="Coupon code" className="w-full border border-line px-3 py-2 text-sm" />
-              <button disabled={busy} className="border border-foreground px-4 text-xs uppercase tracking-widest disabled:opacity-50">Apply</button>
-            </form>
+            // A div, not a form: on the checkout page this sits inside the checkout <form>, and nested forms are invalid HTML.
+            <div className="flex gap-2">
+              <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())}
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void apply(); } }} placeholder="Coupon code" aria-label="Coupon code" className="w-full border border-line px-3 py-2 text-sm" />
+              <button type="button" onClick={() => void apply()} disabled={busy} className="border border-foreground px-4 text-xs uppercase tracking-widest disabled:opacity-50">Apply</button>
+            </div>
           )}
           {note && <p className="mt-2 text-xs text-muted" role="status">{note}</p>}
         </div>

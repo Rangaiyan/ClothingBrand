@@ -295,3 +295,22 @@ test("team: list admins, add by email, unknown email, and no self-removal", asyn
   claims = (await getAuth().getUser(alice.uid)).customClaims;
   assert.deepEqual(claims, { vip: true, admin: false });
 });
+
+test("first-order-only coupon: works once, then refused for the account and for the same phone on a new account", async () => {
+  await seedProduct("pf", 10);
+  await db.doc("coupons/WELCOME15").set({
+    code: "WELCOME15", type: "percent", value: 15, minOrder: 999, usageLimit: null,
+    perUserLimit: 1, firstOrderOnly: true, expiresAt: null, active: true, usedCount: 0,
+  });
+  const carol = await signUp("carol@example.com");
+  const dave = await signUp("dave@example.com");
+  const withCode = (key, phone) => ({ ...base("pf", 1, key), couponCode: "WELCOME15", contact: { name: "Some One", email: "x@example.com", phone } });
+
+  const first = await call("createOrder", withCode("key-first-0001", "9123456780"), carol.token);
+  assert.equal(first.result.total, 850 + 99); // 15% off ₹1000, plus the flat shipping the pricing tests use
+  assert.match((await call("createOrder", withCode("key-first-0002", "9123456780"), carol.token)).error?.message, /first order/);
+  // another account on a phone number that already ordered is refused too
+  assert.match((await call("createOrder", withCode("key-first-0003", "9123456780"), dave.token)).error?.message, /first order/);
+  // a genuinely new customer still gets it
+  assert.ok((await call("createOrder", withCode("key-first-0004", "9000000001"), dave.token)).result);
+});

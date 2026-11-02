@@ -35,8 +35,19 @@ export function variantLookup(docs: Awaited<ReturnType<typeof loadProducts>>) {
   };
 }
 
-/** Loads a coupon by code plus how many times this user has redeemed it. */
-export async function loadCoupon(code: string | undefined, uid: string, get: Getter) {
+/** Orders that count as "having ordered before": anything not cancelled and whose payment did not fail or lapse. */
+const isRealOrder = (o: FirebaseFirestore.DocumentData) =>
+  o.fulfilment?.status !== "cancelled" && o.payment?.status !== "failed" && o.payment?.status !== "expired";
+
+/**
+ * Loads a coupon by code plus how many times this user has redeemed it.
+ * For first-order-only coupons, rejects customers who already have an order, matched by account and,
+ * when given, by phone number so a second account on the same number can't claim it again.
+ */
+export async function loadCoupon(
+  code: string | undefined, uid: string, get: Getter,
+  opts: { tx?: Transaction; phone?: string } = {},
+) {
   if (!code) return undefined;
   const id = code.trim().toUpperCase();
   const [cSnap, rSnap] = await Promise.all([
@@ -57,5 +68,12 @@ export async function loadCoupon(code: string | undefined, uid: string, get: Get
     expiresAt: d.expiresAt ? d.expiresAt.toDate() : null,
     active: d.active === true,
   };
+  if (d.firstOrderOnly === true) {
+    const queries = [db.collection("orders").where("uid", "==", uid).limit(20)];
+    if (opts.phone) queries.push(db.collection("orders").where("contact.phone", "==", opts.phone).limit(20));
+    const snaps = await Promise.all(queries.map((q) => (opts.tx ? opts.tx.get(q) : q.get())));
+    if (snaps.some((s) => s.docs.some((o) => isRealOrder(o.data()))))
+      throw new OrderError("failed-precondition", "This offer is only valid on your first order.");
+  }
   return { coupon, userUses: rSnap.exists ? (rSnap.data()!.count ?? 0) : 0, ref: cSnap.ref };
 }

@@ -11,7 +11,7 @@ import { couponSchema, type CouponForm, type CouponValues } from "@/validations/
 import type { Coupon } from "@/types";
 import { Badge, btn, btnGhost, Field, Input, input, Notice, PageHeader, td, th } from "./ui";
 
-const BLANK: CouponForm = { code: "", type: "percent", value: 10, minOrder: "", maxDiscount: "", usageLimit: "", perUserLimit: "", expiresOn: "", active: true };
+const BLANK: CouponForm = { code: "", type: "percent", value: 10, minOrder: "", maxDiscount: "", usageLimit: "", perUserLimit: "", expiresOn: "", firstOrderOnly: false, active: true };
 
 export function CouponsAdmin() {
   const { rows, loading } = useCollection<Coupon>(() => query(collection(getDb(), "coupons"), orderBy("code")), "coupons");
@@ -28,7 +28,7 @@ export function CouponsAdmin() {
       await setDoc(doc(getDb(), "coupons", code), {
         code, type: v.type, value: v.value, active: v.active,
         minOrder: v.minOrder ?? null, maxDiscount: v.maxDiscount ?? null,
-        usageLimit: v.usageLimit ?? null, perUserLimit: v.perUserLimit ?? null,
+        usageLimit: v.usageLimit ?? null, perUserLimit: v.perUserLimit ?? null, firstOrderOnly: v.firstOrderOnly === true,
         expiresAt: v.expiresOn ? Timestamp.fromDate(new Date(`${v.expiresOn}T23:59:59`)) : null,
       }, { merge: true });
       setOpen(false);
@@ -38,7 +38,7 @@ export function CouponsAdmin() {
   function edit(c: Coupon & { id: string }) {
     reset({
       code: c.code, type: c.type, value: c.value, active: c.active,
-      minOrder: c.minOrder ?? "", maxDiscount: c.maxDiscount ?? "", usageLimit: c.usageLimit ?? "", perUserLimit: c.perUserLimit ?? "",
+      minOrder: c.minOrder ?? "", maxDiscount: c.maxDiscount ?? "", usageLimit: c.usageLimit ?? "", perUserLimit: c.perUserLimit ?? "", firstOrderOnly: c.firstOrderOnly === true,
       expiresOn: c.expiresAt ? c.expiresAt.toDate().toISOString().slice(0, 10) : "",
     });
     setEditing(true); setOpen(true);
@@ -58,6 +58,7 @@ export function CouponsAdmin() {
           <Field label="Expires on"><Input type="date" {...register("expiresOn")} /></Field>
           <Field label="Total usage limit"><Input type="number" {...register("usageLimit")} /></Field>
           <Field label="Uses per customer"><Input type="number" {...register("perUserLimit")} /></Field>
+          <label className="flex items-center gap-2 self-end pb-2 text-sm"><input type="checkbox" {...register("firstOrderOnly")} /> First order only</label>
           <label className="flex items-center gap-2 self-end pb-2 text-sm"><input type="checkbox" {...register("active")} /> Enabled</label>
           <div className="flex gap-2 sm:col-span-3"><button className={btn} disabled={isSubmitting}>Save</button><button type="button" className={btnGhost} onClick={() => setOpen(false)}>Cancel</button></div>
         </form>
@@ -70,7 +71,7 @@ export function CouponsAdmin() {
               <tr key={c.id} className="border-t border-line">
                 <td className={`${td} font-mono`}>{c.code}</td>
                 <td className={td}>{c.type === "percent" ? `${c.value}%` : formatINR(c.value)}{c.maxDiscount ? ` (max ${formatINR(c.maxDiscount)})` : ""}</td>
-                <td className={`${td} text-xs text-muted`}>{[c.minOrder && `min ${formatINR(c.minOrder)}`, c.perUserLimit && `${c.perUserLimit}/customer`, c.expiresAt && `until ${c.expiresAt.toDate().toLocaleDateString("en-IN")}`].filter(Boolean).join(" · ") || "—"}</td>
+                <td className={`${td} text-xs text-muted`}>{[c.minOrder && `min ${formatINR(c.minOrder)}`, c.perUserLimit && `${c.perUserLimit}/customer`, c.firstOrderOnly && "first order only", c.expiresAt && `until ${c.expiresAt.toDate().toLocaleDateString("en-IN")}`].filter(Boolean).join(" · ") || "—"}</td>
                 <td className={td}>{c.usedCount ?? 0}{c.usageLimit ? ` / ${c.usageLimit}` : ""}</td>
                 <td className={td}><Badge tone={c.active ? "good" : "neutral"}>{c.active ? "Enabled" : "Disabled"}</Badge></td>
                 <td className={td}>
