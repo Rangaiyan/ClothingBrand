@@ -47,7 +47,7 @@ export function ContentAdmin() {
       {msg && <Notice kind={msg.kind}>{msg.text}</Notice>}
 
       <form onSubmit={saveSettings} className={`${box} mb-8 grid max-w-3xl gap-4 sm:grid-cols-2`}>
-        <h2 className="font-sans text-sm font-medium sm:col-span-2">Announcement, contact and social links</h2>
+        <h2 className="text-sm font-semibold sm:col-span-2">Announcement, contact and social links</h2>
         <div className="sm:col-span-2"><Field label="Announcement bar text (separate several messages with |; blank hides it)"><Input value={s.announcement} onChange={(e) => set("announcement", e.target.value)} /></Field></div>
         <Field label="Contact email"><Input type="email" value={s.contactEmail} onChange={(e) => set("contactEmail", e.target.value)} /></Field>
         <Field label="Contact phone"><Input value={s.contactPhone} onChange={(e) => set("contactPhone", e.target.value)} /></Field>

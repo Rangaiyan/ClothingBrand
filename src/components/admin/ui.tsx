@@ -1,13 +1,13 @@
 import { forwardRef } from "react";
 
 export const input = "w-full border border-line bg-white px-3 py-2 text-sm";
-export const btn = "bg-foreground px-4 py-2 text-xs font-medium uppercase tracking-widest text-white disabled:opacity-50";
-export const btnGhost = "border border-foreground px-4 py-2 text-xs font-medium uppercase tracking-widest disabled:opacity-50";
+export const btn = "bg-foreground px-4 py-2 text-xs font-semibold uppercase tracking-wider !text-white disabled:opacity-50";
+export const btnGhost = "border border-foreground px-4 py-2 text-xs font-semibold uppercase tracking-wider disabled:opacity-50";
 
 export function PageHeader({ title, children }: { title: string; children?: React.ReactNode }) {
   return (
     <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-      <h1 className="font-serif text-3xl">{title}</h1>
+      <h1 className="text-[22px] font-semibold tracking-tight">{title}</h1>
       <div className="flex gap-2">{children}</div>
     </div>
   );
@@ -15,7 +15,7 @@ export function PageHeader({ title, children }: { title: string; children?: Reac
 
 export function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
   return (
-    <label className="block text-xs text-muted">
+    <label className="block text-xs font-semibold text-neutral-700">
       {label}
       <div className="mt-1 text-foreground">{children}</div>
       {error && <span className="mt-1 block text-red-700" role="alert">{error}</span>}
@@ -41,5 +41,5 @@ export function Badge({ tone = "neutral", children }: { tone?: "neutral" | "good
   return <span className={`inline-block px-2 py-0.5 text-[11px] ${tones[tone]}`}>{children}</span>;
 }
 
-export const th = "px-3 py-2 text-left text-xs font-medium uppercase tracking-wider text-muted";
+export const th = "px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-neutral-700";
 export const td = "px-3 py-3 text-sm";

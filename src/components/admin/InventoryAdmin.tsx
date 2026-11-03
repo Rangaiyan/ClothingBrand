@@ -58,7 +58,7 @@ export function InventoryAdmin() {
         </table>
       </div>
 
-      <h2 className="mb-3 mt-10 font-serif text-2xl">Recent stock changes</h2>
+      <h2 className="mb-3 mt-10 text-xl font-semibold">Recent stock changes</h2>
       <div className="overflow-x-auto border border-line bg-white">
         <table className="w-full min-w-[560px]">
           <thead><tr><th className={th}>When</th><th className={th}>SKU</th><th className={th}>Change</th><th className={th}>Reason</th></tr></thead>

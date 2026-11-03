@@ -23,7 +23,7 @@ export function CategoriesAdmin() {
       <div className="grid gap-6 lg:grid-cols-2">
         {CATEGORY_GROUPS.map((g) => (
           <section key={g.slug} className="border border-line bg-white p-5">
-            <h2 className="font-sans text-sm font-medium">{g.name} <span className="text-muted">· {g.tagline} · /{g.slug}</span></h2>
+            <h2 className="text-sm font-semibold">{g.name} <span className="text-muted">· {g.tagline} · /{g.slug}</span></h2>
             <ul className="mt-3 divide-y divide-line text-sm">
               {g.subcategories.map((s) => (
                 <li key={s.slug} className="flex justify-between py-2">
@@ -35,7 +35,7 @@ export function CategoriesAdmin() {
           </section>
         ))}
         <section className="border border-line bg-white p-5">
-          <h2 className="font-sans text-sm font-medium">Collections</h2>
+          <h2 className="text-sm font-semibold">Collections</h2>
           <ul className="mt-3 divide-y divide-line text-sm">
             {COLLECTIONS.map((c) => (
               <li key={c.slug} className="flex justify-between py-2">

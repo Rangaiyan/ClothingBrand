@@ -81,8 +81,7 @@ export function ProductForm({ id }: { id: string }) {
           soldCount: live?.soldCount ?? 0,
         });
       });
-      setSaved("Saved. The storefront updates within a minute.");
-      if (isNew) router.replace(`/admin/products/${docId}`);
+      router.push("/admin/products");
     } catch (e) {
       setError(errMsg(e));
     }
@@ -91,91 +90,114 @@ export function ProductForm({ id }: { id: string }) {
   if (!loaded) return <Notice>{error || "Loading…"}</Notice>;
 
   const e = errors;
+  const card = "space-y-4 border border-line bg-white p-5";
+  const cardTitle = "text-sm font-semibold";
   return (
-    <form noValidate onSubmit={handleSubmit(onSubmit)} className="max-w-3xl space-y-8">
+    <form noValidate onSubmit={handleSubmit(onSubmit)}>
       <PageHeader title={isNew ? "New product" : "Edit product"}>
-        <Link href="/admin/products" className="px-4 py-2 text-xs uppercase tracking-widest underline">Back</Link>
+        <Link href="/admin/products" className="px-4 py-2 text-xs font-semibold uppercase tracking-wider underline">Back</Link>
         <button className={btn} disabled={isSubmitting}>{isSubmitting ? "Saving…" : "Save"}</button>
       </PageHeader>
-      <Notice>{error}</Notice><Notice kind="ok">{saved}</Notice>
+      <div className="mb-4 space-y-1"><Notice>{error}</Notice><Notice kind="ok">{saved}</Notice></div>
 
-      <section className="grid gap-4 border border-line bg-white p-5 sm:grid-cols-2">
-        <Field label="Name" error={e.name?.message}>
-          <Input {...register("name", { onChange: (ev) => { if (isNew) setValue("slug", slugify(ev.target.value)); } })} />
-        </Field>
-        <Field label="URL slug" error={e.slug?.message}><Input {...register("slug")} /></Field>
-        <div className="sm:col-span-2">
-          <Field label="Description" error={e.description?.message}><textarea {...register("description")} rows={4} className={input} /></Field>
-        </div>
-        <Field label="Category" error={e.category?.message}>
-          <select {...register("category", { onChange: () => setValue("subcategory", "") })} className={input}>
-            <option value="">Select…</option>
-            {CATEGORY_GROUPS.map((g) => <option key={g.slug} value={g.slug}>{g.name}</option>)}
-          </select>
-        </Field>
-        <Field label="Subcategory" error={e.subcategory?.message}>
-          <select {...register("subcategory")} className={input} disabled={!category}>
-            <option value="">{category ? "Select…" : "Choose a category first"}</option>
-            {getGroup(category)?.subcategories.map((s) => <option key={s.slug} value={s.slug}>{s.name}</option>)}
-          </select>
-        </Field>
-        <Field label="Fit (optional)"><Input {...register("fit")} placeholder="Regular, Slim, Relaxed…" /></Field>
-        <Field label="Fabric / material" error={e.fabric?.message}><Input {...register("fabric")} /></Field>
-        <Field label="Selling price (₹)" error={e.price?.message}><Input type="number" min={0} {...register("price")} /></Field>
-        <Field label="Original price (₹)" error={e.originalPrice?.message}><Input type="number" min={0} {...register("originalPrice")} /></Field>
-      </section>
-
-      <section className="space-y-3 border border-line bg-white p-5">
-        <h2 className="font-sans text-sm font-medium">Images</h2>
-        <p className="text-xs text-muted">The first image is the main one. Use ★ to reorder.</p>
-        <ImageField folder="products" id={docId} images={images} onChange={setImages} multiple />
-      </section>
-
-      <section className="space-y-3 border border-line bg-white p-5">
-        <h2 className="font-sans text-sm font-medium">Variants and stock</h2>
-        <p className="text-xs text-muted">Stock of existing variants is changed on the Inventory page so every change is logged.</p>
-        {fields.map((f, i) => {
-          const locked = lockedSkus.has(getValues(`variants.${i}.sku`));
-          return (
-            <div key={f.id} className="grid grid-cols-2 items-end gap-2 sm:grid-cols-[1.4fr_1fr_1fr_0.7fr_auto]">
-              <Field label="SKU" error={e.variants?.[i]?.sku?.message}><Input {...register(`variants.${i}.sku`)} readOnly={locked} /></Field>
-              <Field label="Size" error={e.variants?.[i]?.size?.message}><Input {...register(`variants.${i}.size`)} /></Field>
-              <Field label="Colour" error={e.variants?.[i]?.colour?.message}><Input {...register(`variants.${i}.colour`)} /></Field>
-              <Field label={locked ? "Stock (view)" : "Opening stock"}>
-                <Input type="number" min={0} {...register(`variants.${i}.stock`)} readOnly={locked} />
-              </Field>
-              <button type="button" className="pb-2 text-xs text-red-700 underline" onClick={() => remove(i)} disabled={fields.length === 1}>Remove</button>
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        {/* Main column */}
+        <div className="space-y-6">
+          <section className={`${card} sm:grid sm:grid-cols-2 sm:gap-4 sm:space-y-0`}>
+            <h2 className={`${cardTitle} sm:col-span-2`}>Basic information</h2>
+            <Field label="Name" error={e.name?.message}>
+              <Input {...register("name", { onChange: (ev) => { if (isNew) setValue("slug", slugify(ev.target.value)); } })} />
+            </Field>
+            <Field label="URL slug" error={e.slug?.message}><Input {...register("slug")} /></Field>
+            <div className="sm:col-span-2">
+              <Field label="Description" error={e.description?.message}><textarea {...register("description")} rows={4} className={input} /></Field>
             </div>
-          );
-        })}
-        <Notice>{typeof e.variants?.message === "string" ? e.variants.message : e.variants?.root?.message}</Notice>
-        <button type="button" className="text-xs underline" onClick={() => append({ sku: "", size: "Free Size", colour: "", stock: 0 })}>+ Add variant</button>
-      </section>
+            <Field label="Fabric / material" error={e.fabric?.message}><Input {...register("fabric")} /></Field>
+            <Field label="Fit (optional)"><Input {...register("fit")} placeholder="Regular, Slim, Relaxed…" /></Field>
+          </section>
 
-      <section className="grid gap-4 border border-line bg-white p-5 sm:grid-cols-2">
-        <Field label="Specifications (one “Name: value” per line)"><textarea {...register("specifications")} rows={5} className={input} /></Field>
-        <Field label="Care instructions (one per line)"><textarea {...register("care")} rows={5} className={input} /></Field>
-      </section>
+          <section className={card}>
+            <h2 className={cardTitle}>Images</h2>
+            <p className="text-xs text-muted">The first image is the main one. Use ★ to reorder.</p>
+            <ImageField folder="products" id={docId} images={images} onChange={setImages} multiple />
+          </section>
 
-      <section className="space-y-3 border border-line bg-white p-5 text-sm">
-        <h2 className="font-sans text-sm font-medium">Collections</h2>
-        <p className="text-xs text-muted">A product can be in several. “Best seller” and “Featured” below also place it in Best Sellers and Trending Now.</p>
-        <div className="flex flex-wrap gap-x-6 gap-y-2">
-          {COLLECTIONS.filter((c) => c.slug !== "best-sellers" && c.slug !== "trending-now").map((c) => (
-            <label key={c.slug} className="flex items-center gap-2">
-              <input type="checkbox" checked={collections.includes(c.slug)}
-                onChange={(ev) => setValue("collections", ev.target.checked ? [...collections, c.slug] : collections.filter((x) => x !== c.slug))} />
-              {c.name}
-            </label>
-          ))}
+          <section className={card}>
+            <h2 className={cardTitle}>Variants and stock</h2>
+            <p className="text-xs text-muted">Stock of existing variants is changed on the Inventory page so every change is logged.</p>
+            {fields.map((f, i) => {
+              const locked = lockedSkus.has(getValues(`variants.${i}.sku`));
+              return (
+                <div key={f.id} className="grid grid-cols-2 items-end gap-2 border-t border-line pt-3 sm:grid-cols-[1.4fr_1fr_1fr_0.7fr_auto]">
+                  <Field label="SKU" error={e.variants?.[i]?.sku?.message}><Input {...register(`variants.${i}.sku`)} readOnly={locked} /></Field>
+                  <Field label="Size" error={e.variants?.[i]?.size?.message}><Input {...register(`variants.${i}.size`)} /></Field>
+                  <Field label="Colour" error={e.variants?.[i]?.colour?.message}><Input {...register(`variants.${i}.colour`)} /></Field>
+                  <Field label={locked ? "Stock (view)" : "Opening stock"}>
+                    <Input type="number" min={0} {...register(`variants.${i}.stock`)} readOnly={locked} />
+                  </Field>
+                  <button type="button" className="pb-2 text-xs font-semibold text-red-700 underline" onClick={() => remove(i)} disabled={fields.length === 1}>Remove</button>
+                </div>
+              );
+            })}
+            <Notice>{typeof e.variants?.message === "string" ? e.variants.message : e.variants?.root?.message}</Notice>
+            <button type="button" className="text-xs font-semibold underline" onClick={() => append({ sku: "", size: "Free Size", colour: "", stock: 0 })}>+ Add variant</button>
+          </section>
+
+          <section className={`${card} sm:grid sm:grid-cols-2 sm:gap-4 sm:space-y-0`}>
+            <h2 className={`${cardTitle} sm:col-span-2`}>Details</h2>
+            <Field label="Specifications (one “Name: value” per line)"><textarea {...register("specifications")} rows={5} className={input} /></Field>
+            <Field label="Care instructions (one per line)"><textarea {...register("care")} rows={5} className={input} /></Field>
+          </section>
         </div>
-      </section>
 
-      <section className="flex flex-wrap gap-6 border border-line bg-white p-5 text-sm">
-        {(["published", "featured", "bestSeller"] as const).map((k) => (
-          <label key={k} className="flex items-center gap-2"><input type="checkbox" {...register(k)} />{k === "bestSeller" ? "Best seller" : k[0].toUpperCase() + k.slice(1)}</label>
-        ))}
-      </section>
+        {/* Side column: sticks while scrolling on desktop */}
+        <div className="space-y-6 lg:sticky lg:top-6">
+          <section className={card}>
+            <h2 className={cardTitle}>Status</h2>
+            <div className="space-y-2 text-sm font-medium">
+              {(["published", "featured", "bestSeller"] as const).map((k) => (
+                <label key={k} className="flex items-center gap-2"><input type="checkbox" {...register(k)} />{k === "bestSeller" ? "Best seller" : k[0].toUpperCase() + k.slice(1)}</label>
+              ))}
+            </div>
+          </section>
+
+          <section className={card}>
+            <h2 className={cardTitle}>Pricing</h2>
+            <Field label="Selling price (₹)" error={e.price?.message}><Input type="number" min={0} {...register("price")} /></Field>
+            <Field label="Original price (₹)" error={e.originalPrice?.message}><Input type="number" min={0} {...register("originalPrice")} /></Field>
+          </section>
+
+          <section className={card}>
+            <h2 className={cardTitle}>Category</h2>
+            <Field label="Category" error={e.category?.message}>
+              <select {...register("category", { onChange: () => setValue("subcategory", "") })} className={input}>
+                <option value="">Select…</option>
+                {CATEGORY_GROUPS.map((g) => <option key={g.slug} value={g.slug}>{g.name}</option>)}
+              </select>
+            </Field>
+            <Field label="Subcategory" error={e.subcategory?.message}>
+              <select {...register("subcategory")} className={input} disabled={!category}>
+                <option value="">{category ? "Select…" : "Choose a category first"}</option>
+                {getGroup(category)?.subcategories.map((s) => <option key={s.slug} value={s.slug}>{s.name}</option>)}
+              </select>
+            </Field>
+          </section>
+
+          <section className={`${card} text-sm`}>
+            <h2 className={cardTitle}>Collections</h2>
+            <p className="text-xs text-muted">A product can be in several. “Best seller” and “Featured” also place it in Best Sellers and Trending Now.</p>
+            <div className="flex flex-col gap-2 font-medium">
+              {COLLECTIONS.filter((c) => c.slug !== "best-sellers" && c.slug !== "trending-now").map((c) => (
+                <label key={c.slug} className="flex items-center gap-2">
+                  <input type="checkbox" checked={collections.includes(c.slug)}
+                    onChange={(ev) => setValue("collections", ev.target.checked ? [...collections, c.slug] : collections.filter((x) => x !== c.slug))} />
+                  {c.name}
+                </label>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
     </form>
   );
 }

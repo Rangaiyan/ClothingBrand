@@ -43,10 +43,10 @@ async function Year() {
 export async function Footer() {
   const st = await getSettings();
   return (
-    <footer className="mt-24 border-t border-line">
-      <div className="mx-auto grid max-w-[1440px] gap-10 px-4 py-14 md:grid-cols-4 md:px-8">
-        <div>
-          <div className="flex items-center gap-3">
+    <footer className="mt-24 border-t border-line pb-24 md:pb-0">
+      <div className="mx-auto grid max-w-[1440px] grid-cols-2 gap-x-6 gap-y-10 px-4 py-14 md:grid-cols-4 md:px-8">
+        <div className="col-span-2 text-center md:col-span-1 md:text-left">
+          <div className="flex items-center justify-center gap-3 md:justify-start">
             <Image src={logo} alt="" width={40} height={40} className="size-10" />
             <p className="font-serif text-2xl font-semibold tracking-[0.25em] text-brand">KAMELEON</p>
           </div>
@@ -59,7 +59,7 @@ export async function Footer() {
           </ul>
         </div>
         {COLS.map((c) => (
-          <div key={c.title}>
+          <div key={c.title} className={c.title === "Company" ? "col-span-2 text-center md:col-span-1 md:text-left" : ""}>
             <h2 className="font-sans text-xs font-semibold uppercase tracking-widest">{c.title}</h2>
             <ul className="mt-4 space-y-2 text-sm text-muted">
               {c.links.map(([label, href]) => (

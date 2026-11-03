@@ -40,7 +40,7 @@ export function OrderDetail({ id }: { id: string }) {
 
   return (
     <div className="max-w-4xl space-y-6">
-      <PageHeader title={`Order ${id.slice(0, 8)}`}><Link href="/admin/orders" className="text-xs uppercase tracking-widest underline">Back</Link></PageHeader>
+      <PageHeader title={`Order ${id.slice(0, 8)}`}><Link href="/admin/orders" className="text-xs uppercase tracking-wider underline">Back</Link></PageHeader>
       <div className="flex flex-wrap gap-2">
         <Badge tone={payTone(o.payment.status)}>Payment: {o.payment.status}</Badge>
         <Badge>Fulfilment: {o.fulfilment.status}</Badge>
@@ -50,13 +50,13 @@ export function OrderDetail({ id }: { id: string }) {
 
       <div className="grid gap-6 md:grid-cols-2">
         <section className={box}>
-          <h2 className="mb-2 font-sans text-sm font-medium">Customer</h2>
+          <h2 className="mb-2 text-sm font-semibold">Customer</h2>
           <p className="text-sm">{o.contact.name}<br />{o.contact.email}<br />{o.contact.phone}</p>
-          <h2 className="mb-2 mt-4 font-sans text-sm font-medium">Ship to</h2>
+          <h2 className="mb-2 mt-4 text-sm font-semibold">Ship to</h2>
           <p className="text-sm">{o.address.line1}<br />{o.address.city}, {o.address.state} {o.address.pincode}</p>
         </section>
         <section className={box}>
-          <h2 className="mb-2 font-sans text-sm font-medium">Items</h2>
+          <h2 className="mb-2 text-sm font-semibold">Items</h2>
           <ul className="space-y-1 text-sm">
             {o.items.map((i) => <li key={i.sku} className="flex justify-between"><span>{i.name} · {i.colour} · {i.size} × {i.qty}</span><span>{formatINR(i.price * i.qty)}</span></li>)}
           </ul>
@@ -70,7 +70,7 @@ export function OrderDetail({ id }: { id: string }) {
       </div>
 
       <section className={`${box} space-y-4`}>
-        <h2 className="font-sans text-sm font-medium">Fulfilment</h2>
+        <h2 className="text-sm font-semibold">Fulfilment</h2>
         {o.fulfilment.trackingId && <p className="text-sm">Tracking: {o.fulfilment.carrier} {o.fulfilment.trackingId}</p>}
         {next.includes("shipped") && (
           <div className="grid gap-3 sm:grid-cols-2">
@@ -97,7 +97,7 @@ export function OrderDetail({ id }: { id: string }) {
 
       {refundable && (
         <section className={`${box} space-y-3`}>
-          <h2 className="font-sans text-sm font-medium">Refund</h2>
+          <h2 className="text-sm font-semibold">Refund</h2>
           <p className="text-sm text-muted">Refunded so far {formatINR(o.payment.refundedAmount ?? 0)} · refundable {formatINR(remaining)}</p>
           <div className="flex items-end gap-2">
             <Field label="Amount (₹), blank = full balance"><Input type="number" min={1} max={remaining} value={refundAmt} onChange={(e) => setRefundAmt(e.target.value)} /></Field>

@@ -9,10 +9,10 @@ import { CATEGORY_GROUPS } from "@/lib/taxonomy";
 import { getProducts } from "@/services/catalog";
 import { getLatestReviews } from "@/services/reviews";
 
-function Section({ title, href, children }: { title: string; href?: string; children: React.ReactNode }) {
+function Section({ title, href, center, children }: { title: string; href?: string; center?: boolean; children: React.ReactNode }) {
   return (
     <section className="mx-auto mt-20 max-w-[1440px] px-4 md:px-8">
-      <div className="mb-8 flex items-end justify-between">
+      <div className={`mb-8 flex items-end ${center ? "justify-center text-center" : "justify-between"}`}>
         <h2 className="text-3xl md:text-4xl">{title}</h2>
         {href && <Link href={href} className="text-sm underline underline-offset-4">View all</Link>}
       </div>
@@ -83,7 +83,7 @@ export default async function HomePage() {
       ))}
 
       {reviews.length > 0 && (
-        <Section title="What Our Customers Say">
+        <Section title="What Our Customers Say" center>
           <ReviewsCarousel reviews={reviews.map((r) => {
             const product = byId.get(r.productId);
             return { id: r.id, rating: r.rating, title: r.title, body: r.body, authorName: r.authorName, product: product && { name: product.name, slug: product.slug } };
