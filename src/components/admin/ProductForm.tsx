@@ -12,7 +12,7 @@ import { CATEGORY_GROUPS, COLLECTIONS, getGroup, taxonomise } from "@/lib/taxono
 import { productSchema, type ProductForm as FormValues, type ProductValues } from "@/validations/product";
 import type { Product } from "@/types";
 import { ImageField } from "./ImageField";
-import { btn, Field, Input, input, Notice, PageHeader } from "./ui";
+import { btn, Field, Input, input, Notice } from "./ui";
 
 const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const toLines = (o: Record<string, string>) => Object.entries(o).map(([k, v]) => `${k}: ${v}`).join("\n");
@@ -94,15 +94,24 @@ export function ProductForm({ id }: { id: string }) {
   const cardTitle = "text-sm font-semibold";
   return (
     <form noValidate onSubmit={handleSubmit(onSubmit)}>
-      <PageHeader title={isNew ? "New product" : "Edit product"}>
-        <Link href="/admin/products" className="px-4 py-2 text-xs font-semibold uppercase tracking-wider underline">Back</Link>
-        <button className={btn} disabled={isSubmitting}>{isSubmitting ? "Saving…" : "Save"}</button>
-      </PageHeader>
+      <div className="sticky top-[49px] z-20 -mx-4 mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-line bg-neutral-50 px-4 py-3 md:top-0 md:-mx-8 md:-mt-8 md:px-8">
+        <h1 className="text-[22px] font-semibold tracking-tight">{isNew ? "New product" : "Edit product"}</h1>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/products" className="px-4 py-2 text-xs font-semibold uppercase tracking-wider underline">Back</Link>
+          <button className={btn} disabled={isSubmitting}>{isSubmitting ? "Saving…" : "Save"}</button>
+        </div>
+      </div>
       <div className="mb-4 space-y-1"><Notice>{error}</Notice><Notice kind="ok">{saved}</Notice></div>
 
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         {/* Main column */}
         <div className="space-y-6">
+          <section className={card}>
+            <h2 className={cardTitle}>Images</h2>
+            <p className="text-xs text-muted">The first image is the main one. Use “Set as main” to change it.</p>
+            <ImageField folder="products" id={docId} images={images} onChange={setImages} multiple />
+          </section>
+
           <section className={`${card} sm:grid sm:grid-cols-2 sm:gap-4 sm:space-y-0`}>
             <h2 className={`${cardTitle} sm:col-span-2`}>Basic information</h2>
             <Field label="Name" error={e.name?.message}>
@@ -110,16 +119,10 @@ export function ProductForm({ id }: { id: string }) {
             </Field>
             <Field label="URL slug" error={e.slug?.message}><Input {...register("slug")} /></Field>
             <div className="sm:col-span-2">
-              <Field label="Description" error={e.description?.message}><textarea {...register("description")} rows={4} className={input} /></Field>
+              <Field label="Description" error={e.description?.message}><textarea {...register("description")} rows={10} className={input} /></Field>
             </div>
             <Field label="Fabric / material" error={e.fabric?.message}><Input {...register("fabric")} /></Field>
             <Field label="Fit (optional)"><Input {...register("fit")} placeholder="Regular, Slim, Relaxed…" /></Field>
-          </section>
-
-          <section className={card}>
-            <h2 className={cardTitle}>Images</h2>
-            <p className="text-xs text-muted">The first image is the main one. Use ★ to reorder.</p>
-            <ImageField folder="products" id={docId} images={images} onChange={setImages} multiple />
           </section>
 
           <section className={card}>
@@ -151,7 +154,7 @@ export function ProductForm({ id }: { id: string }) {
         </div>
 
         {/* Side column: sticks while scrolling on desktop */}
-        <div className="space-y-6 lg:sticky lg:top-6">
+        <div className="space-y-6 lg:sticky lg:top-24">
           <section className={card}>
             <h2 className={cardTitle}>Status</h2>
             <div className="space-y-2 text-sm font-medium">

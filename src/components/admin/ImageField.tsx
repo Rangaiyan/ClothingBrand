@@ -32,23 +32,31 @@ export function ImageField({
 
   return (
     <div>
-      <div className="flex flex-wrap gap-2">
+      <div className={multiple ? "grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-6" : "flex flex-wrap gap-2"}>
         {images.map((src, i) => (
-          <div key={src} className="relative size-20 border border-line">
+          <div key={src} className={`group relative aspect-square overflow-hidden border border-line bg-neutral-100 ${multiple ? "" : "w-24"}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={src} alt="" className="size-full object-cover" />
-            <button type="button" aria-label="Remove image" className="absolute right-0 top-0 bg-white px-1 text-xs"
+            {multiple && i === 0 && (
+              <span className="absolute left-1 top-1 bg-foreground px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider !text-white">Main</span>
+            )}
+            <button type="button" aria-label="Remove image" title="Remove"
+              className="absolute right-1 top-1 flex size-6 items-center justify-center rounded-full bg-white text-sm font-semibold shadow"
               onClick={() => onChange(images.filter((_, j) => j !== i))}>×</button>
             {multiple && i > 0 && (
-              <button type="button" aria-label="Make first image" className="absolute bottom-0 left-0 bg-white px-1 text-[10px]"
-                onClick={() => onChange([src, ...images.filter((_, j) => j !== i)])}>★</button>
+              <button type="button" aria-label="Make main image"
+                className="absolute inset-x-1 bottom-1 bg-white py-0.5 text-[10px] font-semibold shadow"
+                onClick={() => onChange([src, ...images.filter((_, j) => j !== i)])}>Set as main</button>
             )}
           </div>
         ))}
+        <label className={`flex cursor-pointer flex-col items-center justify-center gap-1 border-2 border-dashed border-neutral-300 bg-white text-center text-xs font-semibold text-neutral-600 hover:border-foreground aspect-square ${multiple ? "" : "w-24"} ${busy ? "pointer-events-none opacity-60" : ""}`}>
+          <span className="text-xl leading-none">{busy ? "…" : "+"}</span>
+          {busy ? "Uploading…" : multiple ? "Add images" : "Add image"}
+          <input type="file" accept="image/*" multiple={multiple} disabled={busy} className="sr-only"
+            onChange={(e) => { void pick(e.target.files); e.target.value = ""; }} />
+        </label>
       </div>
-      <input type="file" accept="image/*" multiple={multiple} disabled={busy} className="mt-2 text-xs"
-        onChange={(e) => { void pick(e.target.files); e.target.value = ""; }} />
-      {busy && <p className="mt-1 text-xs text-muted">Uploading…</p>}
       <Notice>{error}</Notice>
     </div>
   );
