@@ -14,8 +14,8 @@ export async function uploadImage(folder: "products" | "categories" | "banners",
     headers: { "Content-Type": "application/json", Authorization: `Bearer ${await user.getIdToken()}` },
     body: JSON.stringify({ folder, id }),
   });
-  const sig = await res.json();
-  if (!res.ok) throw new Error(sig.error ?? "Could not start upload.");
+  const sig = await readJson(res);
+  if (!res.ok || !sig.apiKey) throw new Error(sig.error ?? `Could not start upload (server returned ${res.status}).`);
 
   const body = new FormData();
   body.append("file", file);
@@ -24,7 +24,14 @@ export async function uploadImage(folder: "products" | "categories" | "banners",
   body.append("folder", sig.folder);
   body.append("signature", sig.signature);
   const up = await fetch(`https://api.cloudinary.com/v1_1/${sig.cloudName}/image/upload`, { method: "POST", body });
-  const data = await up.json();
-  if (!up.ok) throw new Error(data.error?.message ?? "Upload failed.");
+  const data = await readJson(up);
+  if (!up.ok || !data.secure_url) throw new Error(data.error?.message ?? `Upload failed (Cloudinary returned ${up.status}).`);
   return data.secure_url as string;
+}
+
+/** Parses a response without throwing when the body is empty or not JSON (proxies and crashes can do that). */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function readJson(res: Response): Promise<any> {
+  const text = await res.text();
+  try { return text ? JSON.parse(text) : {}; } catch { return {}; }
 }
