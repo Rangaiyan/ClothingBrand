@@ -166,8 +166,8 @@ export function ProductForm({ id }: { id: string }) {
 
           <section className={card}>
             <h2 className={cardTitle}>Pricing</h2>
-            <Field label="Selling price (₹)" error={e.price?.message}><Input type="number" min={0} {...register("price")} /></Field>
             <Field label="Original price (₹)" error={e.originalPrice?.message}><Input type="number" min={0} {...register("originalPrice")} /></Field>
+            <Field label="Selling price (₹)" error={e.price?.message}><Input type="number" min={0} {...register("price")} /></Field>
           </section>
 
           <section className={card}>
